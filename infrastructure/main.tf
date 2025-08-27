@@ -80,7 +80,7 @@ module "cloudsql_postgres" {
   db_user               = local.db_username
   db_password_secret_id = var.db_password_secret_id
   database_name         = "postgres"
-  vpc_network           = module.vpc_network.network_self_link
+  vpc_network           = module.vpc_network.vpc_network_self_link
 }
 
 # -------------------------------------------------------------------------------------
