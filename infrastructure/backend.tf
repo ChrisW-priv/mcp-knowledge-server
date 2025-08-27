@@ -1,6 +1,6 @@
 terraform {
   backend "gcs" {
-    bucket = "kw-edu-course-companion-2-ci-bucket"
+    bucket = "tf-state-mcp-knowledge-server"
     prefix = "terraform/state"
   }
 }

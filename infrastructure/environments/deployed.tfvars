@@ -1,5 +1,5 @@
-google_project_id                         = "edu-course-companion-2"
-google_project_number                     = "91216206530"
+google_project_id                         = "mcp-knowledge-server"
+google_project_number                     = "372502133685"
 google_region                             = "europe-west4"
 github_google_cloud_build_installation_id = "60199852"
-github_repository_uri                     = "https://github.com/ChrisW-priv/edu-course-companion.git"
+github_repository_uri                     = "https://github.com/ChrisW-priv/mcp-knowledge-server.git"
