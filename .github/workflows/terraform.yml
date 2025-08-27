@@ -29,7 +29,7 @@ jobs:
       - name: "Authenticate to Google Cloud"
         uses: "google-github-actions/auth@v2"
         with:
-          project_id: "edu-course-companion"
+          project_id: "mcp-knowledge-server"
           workload_identity_provider: "projects/372502133685/locations/global/workloadIdentityPools/github/providers/github-actions"
 
       # Install the latest version of Terraform CLI

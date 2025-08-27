@@ -16,6 +16,10 @@ while [[ -z "$PROJECT_NUMBER" ]]; do
   read -p "Enter your GCP Project Number: " PROJECT_NUMBER
 done
 
+while [[ -z "$REPO_NAME" ]]; do
+  read -p "Enter your GitHub repository name: " REPO_NAME
+done
+
 read -p "Enter your GitHub repository owner (username or organization): " REPO_OWNER
 REPO_OWNER=${REPO_OWNER:-$DEFAULT_REPO_OWNER}
 
@@ -81,11 +85,49 @@ gcloud storage buckets add-iam-policy-binding gs://$BUCKET_NAME \
   --member="$WIF_PRINCIPAL" \
   --role="roles/storage.objectAdmin"
 
-# --- PRINT WIF PROVIDER RESOURCE NAME ---
+# Enable the services required for Terraform to be able to take over the setup
+gcloud services enable \
+    serviceusage.googleapis.com \
+    cloudresourcemanager.googleapis.com \
+    --project ${PROJECT_ID}
+
+# --- CAPTURE AND PRINT WIF PROVIDER RESOURCE NAME ---
 echo ""
-echo "Your WIF provider resource is:"
-gcloud iam workload-identity-pools providers describe "$PROVIDER_NAME" \
+echo "Capturing WIF provider resource name..."
+WIF_PROVIDER=$(gcloud iam workload-identity-pools providers describe "$PROVIDER_NAME" \
   --project="$PROJECT_ID" \
   --location="global" \
   --workload-identity-pool="$POOL_NAME" \
-  --format="value(name)"
+  --format="value(name)")
+echo "Your WIF provider resource is: $WIF_PROVIDER"
+
+# --- AUTOMATICALLY UPDATE CONFIGURATION FILES ---
+echo ""
+echo "Updating configuration files..."
+
+# Note: The -i.bak flag creates a backup of the original file.
+# The script is assumed to be run from the 'infrastructure' directory.
+
+# Update .github/workflows/terraform.yml
+echo "Updating ../.github/workflows/terraform.yml..."
+sed -i.bak \
+    -e "s|<{PROJECT_ID_TO_CHANGE}>|$PROJECT_ID|g" \
+    -e "s|<{WIF_PROVIDER_TO_CHANGE}>|$WIF_PROVIDER|g" \
+    ../.github/workflows/terraform.yml
+
+# Update infrastructure/backend.tf
+echo "Updating backend.tf..."
+sed -i.bak "s|<{BUCKET_NAME_TO_CHANGE}>|$BUCKET_NAME|g" backend.tf
+
+# Update infrastructure/environments/deployed.tfvars
+echo "Updating environments/deployed.tfvars..."
+sed -i.bak \
+    -e "s|<{PROJECT_ID_TO_CHANGE}>|$PROJECT_ID|g" \
+    -e "s|<{PROJECT_NUMBER_TO_CHANGE}>|$PROJECT_NUMBER|g" \
+    -e "s|<{REPO_OWNER_TO_CHANGE}>|$REPO_OWNER|g" \
+    -e "s|<{REPO_NAME_TO_CHANGE}>|$REPO_NAME|g" \
+    environments/deployed.tfvars
+
+echo ""
+echo "Configuration files updated successfully!"
+echo "Backup files with the .bak extension have been created in their respective directories."
