@@ -5,6 +5,8 @@
 
 resource "google_project_service" "service" {
   for_each = toset([
+    "cloudresourcemanager.googleapis.com",
+    "serviceusage.googleapis.com",
     "run.googleapis.com",
     "secretmanager.googleapis.com",
     "sqladmin.googleapis.com",
@@ -13,7 +15,6 @@ resource "google_project_service" "service" {
     "iam.googleapis.com",
     "vpcaccess.googleapis.com",
     "compute.googleapis.com",
-    "servicenetworking.googleapis.com",
     "eventarc.googleapis.com",
     "pubsub.googleapis.com",
   ])

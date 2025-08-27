@@ -47,7 +47,7 @@ WIF_ROLES=(
 
 # --- CREATE RESOURCES ---
 echo "Creating GCS bucket for Terraform state..."
-gcloud storage buckets create gs://$BUCKET_NAME --project=$PROJECT_ID --location=EU
+gcloud storage buckets create gs://$BUCKET_NAME --project=$PROJECT_ID --location=EU --uniform-bucket-level-access
 
 echo "Creating Workload Identity Pool..."
 gcloud iam workload-identity-pools create "$POOL_NAME" \
