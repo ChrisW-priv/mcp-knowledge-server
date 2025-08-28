@@ -36,49 +36,9 @@ resource "google_project_iam_member" "pubsubpublisher" {
   member  = "serviceAccount:${data.google_storage_project_service_account.gcs_account.email_address}"
 }
 
-# Cloud Run
-resource "google_cloud_run_v2_service" "extractor" {
-  name                = "${var.cloudrun_application_name}-extractor-service"
-  project             = var.google_project_id
-  location            = var.google_region
-  deletion_protection = false
-
-  template {
-    service_account = var.service_account_email
-
-    scaling {
-      min_instance_count = 0
-      max_instance_count = 1
-    }
-
-    # mount both buckets via GCS volumes
-    volumes {
-      name = "input-bucket"
-      gcs { bucket = var.existing_input_bucket_name }
-    }
-    volumes {
-      name = "output-bucket"
-      gcs { bucket = var.existing_output_bucket_name }
-    }
-
-    containers {
-      image = var.docker_image_url
-
-      volume_mounts {
-        name       = "input-bucket"
-        mount_path = var.input_mount_path
-      }
-      volume_mounts {
-        name       = "output-bucket"
-        mount_path = var.output_mount_path
-      }
-    }
-  }
-}
-
 # Let Eventarc’s service agent invoke the Cloud Run service
 resource "google_cloud_run_service_iam_member" "eventarc_invoker" {
-  service  = google_cloud_run_v2_service.extractor.name
+  service  = var.cloudrun_application_id
   location = var.google_region
   role     = "roles/run.invoker"
   member   = "serviceAccount:${local.pubsub_service_account_email}"
@@ -99,7 +59,7 @@ resource "google_eventarc_trigger" "on_input_finalized" {
   project  = var.google_project_id
   location = var.google_region
   depends_on = [
-    google_cloud_run_v2_service.extractor,
+    var.cloudrun_application_id,
     google_project_iam_member.sa_eventarc_receiver,
     google_project_iam_member.pubsubpublisher,
   ]
@@ -116,7 +76,7 @@ resource "google_eventarc_trigger" "on_input_finalized" {
 
   destination {
     cloud_run_service {
-      service = google_cloud_run_v2_service.extractor.id
+      service = var.cloudrun_application_id
       region  = var.google_region
     }
   }

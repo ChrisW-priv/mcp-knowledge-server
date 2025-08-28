@@ -1,13 +1,6 @@
 #!/bin/bash
 set -e
 
-# --- Default values ---
-DEFAULT_POOL_NAME="github"
-DEFAULT_PROVIDER_NAME="github-actions"
-DEFAULT_REPO_OWNER="ChrisW-priv"
-
-# --- Interactive Variable Setup ---
-# These variables require your input.
 while [[ -z "$PROJECT_ID" ]]; do
   read -p "Enter your GCP Project ID: " PROJECT_ID
 done
@@ -16,24 +9,42 @@ while [[ -z "$PROJECT_NUMBER" ]]; do
   read -p "Enter your GCP Project Number: " PROJECT_NUMBER
 done
 
-while [[ -z "$REPO_NAME" ]]; do
-  read -p "Enter your GitHub repository name: " REPO_NAME
+while [[ -z "$GOOGLE_REGION" ]]; do
+  DEFAULT_GOOGLE_REGION="europe-west4"
+  read -p "Enter your prefered google region [$DEFAULT_GOOGLE_REGION]: " GOOGLE_REGION
+  GOOGLE_REGION=${GOOGLE_REGION:-$DEFAULT_GOOGLE_REGION}
 done
 
-read -p "Enter your GitHub repository owner (username or organization): " REPO_OWNER
-REPO_OWNER=${REPO_OWNER:-$DEFAULT_REPO_OWNER}
+while [[ -z "$REPO_NAME" ]]; do
+  DEFAULT_REPO_NAME=$PROJECT_ID
+  read -p "Enter your GitHub repository name [$DEFAULT_REPO_NAME]: " REPO_NAME
+  REPO_NAME=${REPO_NAME:-$DEFAULT_REPO_NAME}
+done
 
-# --- These variables most likely do not need to be edited ---
-# You can press Enter to accept the default values.
-DEFAULT_BUCKET_NAME="tf-state-$PROJECT_ID"
-read -p "Enter the GCS bucket name for Terraform state [$DEFAULT_BUCKET_NAME]: " BUCKET_NAME
-BUCKET_NAME=${BUCKET_NAME:-$DEFAULT_BUCKET_NAME}
+while [[ -z "$REPO_OWNER" ]]; do
+  DEFAULT_REPO_OWNER="ChrisW-priv"
+  read -p "Enter GitHub repository owner [$DEFAULT_REPO_OWNER]: " REPO_OWNER
+  REPO_OWNER=${REPO_OWNER:-$DEFAULT_REPO_OWNER}
+done
 
-read -p "Enter the Workload Identity Pool name [$DEFAULT_POOL_NAME]: " POOL_NAME
-POOL_NAME=${POOL_NAME:-$DEFAULT_POOL_NAME}
+while [[ -z "$BUCKET_NAME" ]]; do
+  DEFAULT_BUCKET_NAME="tf-state-$PROJECT_ID"
+  read -p "Enter the GCS bucket name for Terraform state [$DEFAULT_BUCKET_NAME]: " BUCKET_NAME
+  BUCKET_NAME=${BUCKET_NAME:-$DEFAULT_BUCKET_NAME}
+done
 
-read -p "Enter the Workload Identity Provider name [$DEFAULT_PROVIDER_NAME]: " PROVIDER_NAME
-PROVIDER_NAME=${PROVIDER_NAME:-$DEFAULT_PROVIDER_NAME}
+while [[ -z "$POOL_NAME" ]]; do
+  DEFAULT_POOL_NAME="github"
+  read -p "Enter the Workload Identity Pool name [$DEFAULT_POOL_NAME]: " POOL_NAME
+  POOL_NAME=${POOL_NAME:-$DEFAULT_POOL_NAME}
+done
+
+while [[ -z "$PROVIDER_NAME" ]]; do
+  DEFAULT_PROVIDER_NAME="github-actions"
+  read -p "Enter the Workload Identity Provider name [$DEFAULT_PROVIDER_NAME]: " PROVIDER_NAME
+  PROVIDER_NAME=${PROVIDER_NAME:-$DEFAULT_PROVIDER_NAME}
+done
+
 
 # --- DEFINE ROLES TO ASSIGN TO WIF PRINCIPAL ---
 WIF_ROLES=(
@@ -51,7 +62,7 @@ WIF_ROLES=(
 
 # --- CREATE RESOURCES ---
 echo "Creating GCS bucket for Terraform state..."
-gcloud storage buckets create gs://$BUCKET_NAME --project=$PROJECT_ID --location=EU --uniform-bucket-level-access
+gcloud storage buckets create gs://$BUCKET_NAME --project=$PROJECT_ID --location=$GOOGLE_REGION --uniform-bucket-level-access
 
 echo "Creating Workload Identity Pool..."
 gcloud iam workload-identity-pools create "$POOL_NAME" \
@@ -100,6 +111,15 @@ WIF_PROVIDER=$(gcloud iam workload-identity-pools providers describe "$PROVIDER_
   --workload-identity-pool="$POOL_NAME" \
   --format="value(name)")
 echo "Your WIF provider resource is: $WIF_PROVIDER"
+
+gcloud artifacts repositories create ghcr \
+  --project=$PROJECT_ID \
+  --repository-format="docker" \
+  --location=$GOOGLE_REGION \
+  --description="Repository link to the Github Container Repository" \
+  --mode="remote-repository" \
+  --remote-repo-config-desc="GitHub Container Repository" \
+  --remote-docker-repo="https://ghcr.io"
 
 # --- AUTOMATICALLY UPDATE CONFIGURATION FILES ---
 echo ""

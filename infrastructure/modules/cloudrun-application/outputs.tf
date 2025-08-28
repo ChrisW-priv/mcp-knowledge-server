@@ -1,3 +1,8 @@
+output "cloudrun_service_id" {
+  description = "The resource ID of the deployed Cloud Run service."
+  value       = google_cloud_run_v2_service.application_backend.id
+}
+
 output "cloudrun_service_url" {
   description = "The URL of the deployed Cloud Run service."
   value       = google_cloud_run_v2_service.application_backend.uri

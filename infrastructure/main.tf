@@ -101,47 +101,31 @@ module "file-processor" {
   depends_on = [
     google_project_service.service
   ]
-  source                      = "./modules/file-processor"
-  google_project_id           = var.google_project_id
-  google_project_number       = var.google_project_number
-  google_region               = var.google_region
-  cloudrun_application_name   = "main"
-  existing_output_bucket_name = module.cloudrun-application.django_uploads_bucket_name
-  existing_input_bucket_name  = module.cloudrun-application.django_uploads_bucket_name
-  service_account_email       = module.cloudrun-application.cloudrun_service_account_email
-  docker_image_url            = "${module.cloudbuild.artifact_registry_url}/${module.cloudbuild.image_name}:latest"
-}
-
-module "cloudbuild" {
-  depends_on = [
-    google_project_service.service
-  ]
-  source                                    = "./modules/cloudbuild"
-  google_project_id                         = var.google_project_id
-  google_project_number                     = var.google_project_number
-  google_region                             = var.google_region
-  github_google_cloud_build_installation_id = var.github_google_cloud_build_installation_id
-  github_repository_uri                     = var.github_repository_uri
-  github_token_secret_value                 = var.github_token_secret_value
+  source                     = "./modules/file-processor"
+  google_project_id          = var.google_project_id
+  google_project_number      = var.google_project_number
+  google_region              = var.google_region
+  cloudrun_application_id    = module.cloudrun-application.cloudrun_service_id
+  existing_input_bucket_name = module.cloudrun-application.django_uploads_bucket_name
+  service_account_email      = module.cloudrun-application.cloudrun_service_account_email
 }
 
 module "cloudrun-application" {
   depends_on = [
     google_project_service.service,
-    module.cloudbuild
   ]
   source                              = "./modules/cloudrun-application"
   google_project_id                   = var.google_project_id
   google_project_number               = var.google_project_number
   google_region                       = var.google_region
-  cloudrun_application_name           = "main"
+  cloudrun_application_name           = "knowledge-server"
   django_superuser_password_secret_id = var.django_superuser_secret_id
   django_secret_key_secret_id         = var.django_secret_key_secret_id
   database_type                       = "sqlite3"
-  docker_image_url                    = "${module.cloudbuild.artifact_registry_url}/${module.cloudbuild.image_name}:latest"
+  docker_image_url                    = "${var.google_region}-docker.pkg.dev/${var.google_project_id}/ghcr/chrisw-priv/mcp-knowledge-server/backend:latest"
   postgres_username                   = local.db_username
-  # cloudsql_connection_name            = module.cloudsql_postgres.instance_connection_name
-  # postgres_password_secret_id         = module.cloudsql_postgres.db_password_secret_id # Use the secret ID output from cloudsql_postgres
+  cloudsql_connection_name            = module.cloudsql_postgres.instance_connection_name
+  postgres_password_secret_id         = module.cloudsql_postgres.db_password_secret_id # Use the secret ID output from cloudsql_postgres
 
   extra_env_vars = [
     {

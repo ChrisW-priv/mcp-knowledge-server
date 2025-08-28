@@ -14,7 +14,7 @@ variable "google_region" {
 }
 
 variable "cloudrun_application_name" {
-  description = "The full name of the application (e.g., 'edu-course-companion')."
+  description = "The full name of the application."
   type        = string
 }
 

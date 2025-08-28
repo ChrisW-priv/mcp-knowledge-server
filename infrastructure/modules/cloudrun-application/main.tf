@@ -454,6 +454,7 @@ resource "google_cloud_run_v2_job" "backend_setup_job" {
   project             = var.google_project_id
   location            = var.google_region
   deletion_protection = false
+  depends_on          = [local.cloudrun_service_account]
 
   template {
     template {
