@@ -26,15 +26,17 @@ jobs:
 
       - name: Build Docker image
         run: |
-          IMAGE_NAME=ghcr.io/${{ github.repository }}/backend
+          REPO_LOWER=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+          IMAGE_NAME=ghcr.io/${REPO_LOWER}/backend
           docker build \
             --file backend/Dockerfile \
             --tag $IMAGE_NAME:latest \
             --tag $IMAGE_NAME:${{ github.sha }} \
             .
 
-      - name: Push Docker image (latest)
+      - name: Push Docker image
         run: |
-          IMAGE_NAME=ghcr.io/${{ github.repository }}/backend
+          REPO_LOWER=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+          IMAGE_NAME=ghcr.io/${REPO_LOWER}/backend
           docker push $IMAGE_NAME:latest
           docker push $IMAGE_NAME:${{ github.sha }}
