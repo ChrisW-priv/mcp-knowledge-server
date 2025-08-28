@@ -49,3 +49,8 @@ variable "ai_api_key_env_var_name" {
   type        = string
   default     = "GEMINI_API_KEY"
 }
+
+variable "docker_image_tag" {
+  description = "Tag of the image that should be used"
+  type        = string
+}
