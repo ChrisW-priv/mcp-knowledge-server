@@ -116,6 +116,7 @@ gcloud artifacts repositories create ghcr \
   --project=$PROJECT_ID \
   --repository-format="docker" \
   --location=$GOOGLE_REGION \
+  --no-immutable-tags \
   --description="Repository link to the Github Container Repository" \
   --mode="remote-repository" \
   --remote-repo-config-desc="GitHub Container Repository" \
