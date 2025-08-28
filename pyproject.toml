@@ -10,3 +10,8 @@ dependencies = [
     "djangorestframework>=3.16.1",
     "hypercorn>=0.17.3",
 ]
+
+[dependency-groups]
+docker-image = [
+    "psycopg2-binary>=2.9.10",
+]
