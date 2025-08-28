@@ -14,7 +14,7 @@ PRIVATE_MOUNT = BASE_DIR.parent / 'data' / 'private'
 STATIC_FOLDER_NAME = 'django-static'
 STATIC_ROOT = PUBLIC_MOUNT / STATIC_FOLDER_NAME
 
-UPLOAD_FOLDER_NAME = 'nexus-uploads'
+UPLOAD_FOLDER_NAME = 'django-uploads'
 MEDIA_ROOT = PRIVATE_MOUNT / UPLOAD_FOLDER_NAME
 
 if settings.DEBUG:
