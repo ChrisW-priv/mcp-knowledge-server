@@ -203,11 +203,21 @@ resource "google_storage_bucket_iam_member" "uploads_admin_sa" {
 # FEATURE: Cloud Run Service
 # -------------------------------------------------------------------------------------
 
+resource "null_resource" "wait_for_migration" {
+  depends_on = [google_cloud_run_v2_job.backend_setup_job]
+
+  provisioner "local-exec" {
+    command = "gcloud run jobs execute backend-setup --wait --region=${var.google_region} --project=${var.google_project_id}"
+  }
+}
+
+# Actual service
 resource "google_cloud_run_v2_service" "application_backend" {
   name                = var.cloudrun_application_name
   project             = var.google_project_id
   location            = var.google_region
   deletion_protection = false
+  depends_on          = [null_resource.wait_for_migration]
 
   template {
     service_account = local.cloudrun_service_account.email

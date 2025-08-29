@@ -6,7 +6,7 @@ DB_PASSWORD = os.getenv('POSTGRES_PASSWORD')
 DB_DATABASE_NAME = os.getenv('POSTGRES_DATABASE_NAME', 'postgres')
 
 db_conn_name = os.getenv('DB_CONN_NAME')
-pre_db_conn_name = os.getenv('PRE_DB_CONN_NAME')
+pre_db_conn_name = os.getenv('PRE_DB_CONN_NAME', '/cloudsql/')
 unix_socket_path = f'{pre_db_conn_name}{db_conn_name}'
 
 DATABASES = {'default': {
