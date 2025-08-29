@@ -6,10 +6,6 @@ resource "google_sql_database_instance" "main_instance" {
 
   settings {
     tier = var.instance_tier
-    ip_configuration {
-      ipv4_enabled    = false
-      private_network = var.vpc_network
-    }
   }
 }
 
@@ -34,8 +30,9 @@ resource "google_secret_manager_secret" "db_password_secret" {
 }
 
 resource "random_password" "db_password" {
-  count  = var.db_password_secret_id == "" ? 1 : 0
-  length = 32
+  count   = var.db_password_secret_id == "" ? 1 : 0
+  length  = 32
+  special = false
 }
 
 resource "google_secret_manager_secret_version" "db_password_version" {
