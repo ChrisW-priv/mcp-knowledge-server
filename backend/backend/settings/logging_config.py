@@ -125,7 +125,11 @@ json_lines_stdout_handler = {
 
 
 def get_logging_setup(use_sep_thread=False, use_cloud_handler=True):
-    handlers = {'stdout': stdout_handler, 'stderr': stderr_handler, 'json_lines_to_file': json_lines_stdout_handler}
+    handlers = {
+        'stdout': stdout_handler,
+        'stderr': stderr_handler,
+        # 'json_lines_to_file': json_lines_stdout_handler,
+    }
     if use_cloud_handler:
         from google.cloud.logging import Client
 
