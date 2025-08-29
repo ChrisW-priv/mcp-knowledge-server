@@ -158,7 +158,7 @@ def get_logging_setup(use_sep_thread=False, use_cloud_handler=True):
         'handlers': {'queue_handler': queue_handler, **handlers},
         'loggers': {
             'root': {
-                'level': 'DEBUG',
+                'level': 'INFO',
                 'handlers': root_handlers,
             }
         },

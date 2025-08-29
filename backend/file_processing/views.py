@@ -43,7 +43,7 @@ class EventarcHandler(APIView):
             """
             return Response(status=status.HTTP_204_NO_CONTENT)
 
-        full_name = settings.PRIVATE_MOUNT / filename
+        full_name = str(settings.PRIVATE_MOUNT / filename)
         output_dir = settings.PRIVATE_MOUNT / 'process-results'
         process_file(full_name, output_dir)
         section_digest_file = output_dir / 'sections.jsonl'
