@@ -38,7 +38,7 @@ class EventarcHandler(APIView):
         # For demonstration, just return the validated data
         filename: str = serializer.validated_data['name']
         logger.info(f'Recieived request to process {filename=}')
-        if not filename.startswith(settings.UPLOAD_FOLDER_NAME) or filename == settings.UPLOAD_FOLDER_NAME:
+        if not filename.startswith(settings.UPLOAD_FOLDER_NAME) or filename == f'{settings.UPLOAD_FOLDER_NAME}/':
             """
             Do not process files that were uploaded to a diff folder than the upload folder
             """
