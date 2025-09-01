@@ -31,6 +31,7 @@ class EventarcMessageSerializer(serializers.Serializer):
 
 class EventarcHandler(APIView):
     def post(self, request, format=None):
+        logger.info(f'Request is authenticated as {request.user=}')
         serializer = EventarcMessageSerializer(data=request.data)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

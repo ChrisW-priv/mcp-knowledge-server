@@ -6,6 +6,9 @@ BASE_DIR = settings.BASE_DIR
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
+STATIC_BUCKET_NAME = os.environ.get('STATIC_BUCKET_NAME', None)
+UPLOAD_BUCKET_NAME = os.environ.get('UPLOAD_BUCKET_NAME', None)
+
 STATIC_URL = 'static/'
 
 PUBLIC_MOUNT = BASE_DIR.parent / 'data' / 'public'
@@ -21,7 +24,5 @@ if settings.DEBUG:
     STATIC_URL = '/static/'
     MEDIA_URL = '/media/'
 else:
-    static_bucket_name = os.environ.get('STATIC_BUCKET_NAME', None)
-    upload_bucket_name = os.environ.get('UPLOAD_BUCKET_NAME', None)
-    STATIC_URL = f'https://storage.googleapis.com/{static_bucket_name}/{STATIC_FOLDER_NAME}/'
-    MEDIA_URL = f'https://storage.googleapis.com/{upload_bucket_name}/{UPLOAD_FOLDER_NAME}/'
+    STATIC_URL = f'https://storage.googleapis.com/{STATIC_BUCKET_NAME}/{STATIC_FOLDER_NAME}/'
+    MEDIA_URL = f'https://storage.googleapis.com/{UPLOAD_BUCKET_NAME}/{UPLOAD_FOLDER_NAME}/'
