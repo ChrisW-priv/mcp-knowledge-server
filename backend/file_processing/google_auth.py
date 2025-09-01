@@ -2,6 +2,7 @@ from rest_framework.authentication import BaseAuthentication
 from rest_framework import exceptions
 from google.oauth2 import id_token
 from google.auth.transport import requests
+import jwt
 
 import logging
 
@@ -31,6 +32,9 @@ class GoogleOIDCAuthentication(BaseAuthentication):
             # Use your actual service URL as the audience!
             audience = 'https://knowledge-server-obr76apg5a-ez.a.run.app/'
             logger.info('Trying to verify the oauth2 token')
+            # TEMP: Decode token without verification to inspect claims
+            claims = jwt.decode(token, options={"verify_signature": False})
+            logger.info(f"Token claims: {claims}")
             idinfo = id_token.verify_oauth2_token(token, requests.Request(), audience)
             email = idinfo.get('email')
             if not email:
