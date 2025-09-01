@@ -23,18 +23,13 @@ class ServiceAccountUser:
 class GoogleOIDCAuthentication(BaseAuthentication):
     def authenticate(self, request):
         auth_header = request.META.get('HTTP_AUTHORIZATION')
-        logger.info('Started to authenticate with custom OIDC Authentication')
         if not auth_header or not auth_header.startswith('Bearer '):
             return None  # No Bearer token, let other auth classes try
 
         token = auth_header[len('Bearer '):]
         try:
             # Use your actual service URL as the audience!
-            audience = 'https://knowledge-server-obr76apg5a-ez.a.run.app/'
-            logger.info('Trying to verify the oauth2 token')
-            # TEMP: Decode token without verification to inspect claims
-            claims = jwt.decode(token, options={"verify_signature": False})
-            logger.info(f"Token claims: {claims}")
+            audience = 'https://knowledge-server-obr76apg5a-ez.a.run.app'
             idinfo = id_token.verify_oauth2_token(token, requests.Request(), audience)
             email = idinfo.get('email')
             if not email:
