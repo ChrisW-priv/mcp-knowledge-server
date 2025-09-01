@@ -2,12 +2,6 @@ from rest_framework.authentication import BaseAuthentication
 from rest_framework import exceptions
 from google.oauth2 import id_token
 from google.auth.transport import requests
-import jwt
-
-import logging
-
-
-logger = logging.getLogger(__name__)
 
 
 class ServiceAccountUser:
@@ -28,13 +22,11 @@ class GoogleOIDCAuthentication(BaseAuthentication):
 
         token = auth_header[len('Bearer '):]
         try:
-            # Use your actual service URL as the audience!
             audience = 'https://knowledge-server-obr76apg5a-ez.a.run.app'
             idinfo = id_token.verify_oauth2_token(token, requests.Request(), audience)
             email = idinfo.get('email')
             if not email:
                 raise exceptions.AuthenticationFailed('No email in token')
-            logger.info(f'Successfuly retrieved the {email=}')
             user = ServiceAccountUser(email)
             return (user, None)
         except Exception as e:
