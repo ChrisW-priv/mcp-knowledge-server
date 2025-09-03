@@ -12,14 +12,13 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 import os
 import warnings
+import sys
 
 DEFAULT_SECRET_KEY = """1CqpK58qm5(TY5'Tw-5xR$2"""
 SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', DEFAULT_SECRET_KEY)
 if SECRET_KEY == DEFAULT_SECRET_KEY:
     warnings.warn('SECRET_KEY_ENV variable not set! (USING INSECURE DEFAULT!!!)')
 
-DEPLOYMENT_ENVIRONMENT = os.getenv('DEPLOYMENT_ENVIRONMENT', 'DEBUG')
-DEBUG = DEPLOYMENT_ENVIRONMENT == 'DEBUG'
 
 ALLOWED_HOSTS = ['*']
 
@@ -32,9 +31,13 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'casbin_adapter.apps.CasbinAdapterConfig',
+    'dauthz.apps.DauthzConfig',
     'custom_commands',
     'rest_framework',
     'rest_framework_simplejwt',
+    'content_access_control',
+    'file_processing',
 ]
 
 MIDDLEWARE = [

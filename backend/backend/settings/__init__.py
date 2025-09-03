@@ -4,6 +4,9 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
+DEPLOYMENT_ENVIRONMENT = os.getenv('DEPLOYMENT_ENVIRONMENT', 'DEBUG')
+DEBUG = DEPLOYMENT_ENVIRONMENT == 'DEBUG'
+
 current_dir = os.path.dirname(__file__)
 py_files = glob.glob(os.path.join(current_dir, '*.py'))
 
