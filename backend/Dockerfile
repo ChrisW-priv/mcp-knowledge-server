@@ -23,6 +23,8 @@ WORKDIR /app/backend
 
 COPY backend/ /app/backend
 
+COPY backend/backend/deployed_settings/ /app/backend/backend/settings/
+
 RUN chmod +x ./entrypoint.sh
 
 ENTRYPOINT ["/app/backend/entrypoint.sh", "run_asgi"]
