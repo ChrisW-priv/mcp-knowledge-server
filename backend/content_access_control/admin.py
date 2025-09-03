@@ -1,5 +1,6 @@
 from casbin_adapter.models import CasbinRule
 from django.contrib import admin
+from django.contrib.admin.models import ContentType
 
 from .models import (
     Feature,
@@ -33,9 +34,4 @@ class NetworkAdmin(admin.ModelAdmin):
 class FeatureAdmin(admin.ModelAdmin): ...
 
 
-feature_control_permission = AccessPermissionBuilder(Feature, ['access'])
-FeatureContentAccessPermission, FeatureAccessAdminForm  = feature_control_permission()
-
-@admin.register(FeatureContentAccessPermission)
-class FeatureContentAccessPermissionAdmin(admin.ModelAdmin):
-    form = FeatureAccessAdminForm
+admin.site.register(*AccessPermissionBuilder(Feature, ['access'])())

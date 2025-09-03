@@ -1,9 +1,9 @@
 from django import forms
-
-from content_access_control.model_conversion import str_to_instance, instance_to_str
+from django.contrib import admin
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 
+from content_access_control.model_conversion import str_to_instance, instance_to_str
 from content_access_control.models import (
     ContentAccessPermission,
     PolicySubject,
@@ -37,7 +37,7 @@ class AccessPermissionBuilder:
             )
 
     def __call__(self):
-        return self._build_content_access_permission_proxy(), self._build_admin_form_for_model_proxy()
+        return self._build_content_access_permission_proxy(), self._build_admin_model_for_model_proxy()
 
     def _build_content_access_permission_proxy(self):
         """
@@ -160,3 +160,18 @@ class AccessPermissionBuilder:
         }
 
         return type(class_name, (forms.ModelForm,), attrs)
+
+    def _build_admin_model_for_model_proxy(self):
+        class_name = f'{self.resource_label}ContentAccessPermissionAdmin'
+
+        def get_queryset(_self, request):
+            ct = ContentType.objects.get_for_model(self.resource_model)
+            qs = admin.ModelAdmin.get_queryset(_self, request)
+            return qs.filter(resource_content_type=ct)
+
+        attrs = {
+            'form': self._build_admin_form_for_model_proxy(),
+            'get_queryset': get_queryset
+        }
+
+        return type(class_name, (admin.ModelAdmin, ), attrs)
