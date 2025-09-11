@@ -127,17 +127,18 @@ wheels = [
 
 [[package]]
 name = "content-extraction"
-version = "0.3.1"
+version = "0.4.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "beautifulsoup4" },
+    { name = "langdetect" },
     { name = "lxml" },
     { name = "python-pptx" },
     { name = "requests" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/d3/ab/8f47d00c6daa26b6cf048878e165fa98ea62bec722614a08b4c9135ab959/content_extraction-0.3.1.tar.gz", hash = "sha256:f3316546779eb1f2f107c2a1c945793813021146e514c5acd9f3bd8aa64e7ee2", size = 21351, upload-time = "2025-07-25T11:00:31.982Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/91/6a/f6cc0a5e817aa277824c0b934ff18781f70ff2e7fcb62657b8fc2900d213/content_extraction-0.4.1.tar.gz", hash = "sha256:3cca031dcef1730cb03ff402a0169f2efdc6657b7e6f01720126e3cb5640f6c6", size = 21545, upload-time = "2025-09-11T13:41:57.307Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/bb/1f/8beabd7404115c6ce0fdb973473d06c9bfd84b7dc1f34f44930369af7496/content_extraction-0.3.1-py3-none-any.whl", hash = "sha256:ce11590c41c3b0c8f7949b32f30d7d9e5bf747e1e842fce313fe0f9fb9e7ddf7", size = 22719, upload-time = "2025-07-25T11:00:30.283Z" },
+    { url = "https://files.pythonhosted.org/packages/eb/ee/97ec68a22e0eff2ed898a5722b09a6dac01f16e6f40c1fe2ed9ad92840a9/content_extraction-0.4.1-py3-none-any.whl", hash = "sha256:49486952a48b293b64cd55e53726adea4ca7fd84ce4551f650e470062c3207b0", size = 22911, upload-time = "2025-09-11T13:41:56.202Z" },
 ]
 
 [[package]]
@@ -453,6 +454,15 @@ wheels = [
 ]
 
 [[package]]
+name = "langdetect"
+version = "1.0.9"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "six" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/0e/72/a3add0e4eec4eb9e2569554f7c70f4a3c27712f40e3284d483e88094cc0e/langdetect-1.0.9.tar.gz", hash = "sha256:cbc1fef89f8d062739774bd51eda3da3274006b3661d199c2655f6b3f6d605a0", size = 981474, upload-time = "2021-05-07T07:54:13.562Z" }
+
+[[package]]
 name = "lxml"
 version = "6.0.1"
 source = { registry = "https://pypi.org/simple" }
@@ -527,7 +537,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "casbin", specifier = ">=1.43.0" },
-    { name = "content-extraction", specifier = ">=0.3.1" },
+    { name = "content-extraction", specifier = ">=0.4.1" },
     { name = "django", specifier = ">=5.2.5" },
     { name = "django-content-access-control", specifier = ">=0.3.0" },
     { name = "django-ensuresuperuser", specifier = ">=0.1.0" },
@@ -924,6 +934,15 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/ff/6f/15be211749430f52f2c8f0c69158a6fc961c03aac93fa28d44d1a6f5ebc7/simpleeval-1.0.3.tar.gz", hash = "sha256:67bbf246040ac3b57c29cf048657b9cf31d4e7b9d6659684daa08ca8f1e45829", size = 24358, upload-time = "2024-11-02T10:29:46.912Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/a0/e9/e58082fbb8cecbb6fb4133033c40cc50c248b1a331582be3a0f39138d65b/simpleeval-1.0.3-py3-none-any.whl", hash = "sha256:e3bdbb8c82c26297c9a153902d0fd1858a6c3774bf53ff4f134788c3f2035c38", size = 15762, upload-time = "2024-11-02T10:29:45.706Z" },
+]
+
+[[package]]
+name = "six"
+version = "1.17.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/94/e7/b2c673351809dca68a0e064b6af791aa332cf192da575fd474ed7d6f16a2/six-1.17.0.tar.gz", hash = "sha256:ff70335d468e7eb6ec65b95b99d3a2836546063f63acc5171de367e834932a81", size = 34031, upload-time = "2024-12-04T17:35:28.174Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/b7/ce/149a00dd41f10bc29e5921b496af8b574d8413afcd5e30dfa0ed46c2cc5e/six-1.17.0-py2.py3-none-any.whl", hash = "sha256:4721f391ed90541fddacab5acf947aa0d3dc7d27b2e1e8eda2be8970586c3274", size = 11050, upload-time = "2024-12-04T17:35:26.475Z" },
 ]
 
 [[package]]
