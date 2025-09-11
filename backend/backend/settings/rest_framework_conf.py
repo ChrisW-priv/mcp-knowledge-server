@@ -8,6 +8,6 @@ REST_FRAMEWORK = {
     ],
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.IsAuthenticated",
-        "content_access_control.permissions.SubjectHasUrlPermission",
+        # "content_access_control.permissions.SubjectHasUrlPermission",
     ],
 }
