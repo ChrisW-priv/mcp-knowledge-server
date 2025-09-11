@@ -1,4 +1,5 @@
 import atexit
+import os
 import datetime as dt
 import json
 import logging
@@ -167,7 +168,7 @@ def get_logging_setup(use_sep_thread=False, use_cloud_handler=True):
         "handlers": {"queue_handler": queue_handler, **handlers},
         "loggers": {
             "root": {
-                "level": "INFO",
+                "level": os.getenv("LOG_LEVEL", "INFO"),
                 "handlers": root_handlers,
             }
         },
