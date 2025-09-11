@@ -72,7 +72,7 @@ class EventarcHandler(APIView):
 
 
 def process_file_to_sections(object_name: str):
-    file_id = uuid.uuid7()
+    file_id = str(uuid.uuid7())
     output_dir = settings.PRIVATE_MOUNT / PROCESS_RESULTS_FOLDER / file_id
     _, owner_id, _ = object_name.split("/")
     with open(output_dir / "METADATA", "w") as f:
