@@ -143,6 +143,18 @@ locals {
 # Grant the Cloud Run service account permissions to access required secrets.
 # -------------------------------------------------------------------------------------
 
+resource "google_project_iam_member" "cloudrun_sa_cloudsql_client" {
+  project = var.google_project_id
+  role    = "roles/cloudsql.client"
+  member  = "serviceAccount:${local.cloudrun_service_account.email}"
+}
+
+resource "google_project_iam_member" "cloudrun_sa_cloudsql_viewer" {
+  project = var.google_project_id
+  role    = "roles/cloudsql.viewer"
+  member  = "serviceAccount:${local.cloudrun_service_account.email}"
+}
+
 resource "google_secret_manager_secret_iam_member" "django_superuser_password_secret_accessor" {
   secret_id = local.effective_django_superuser_password_secret_id
   role      = "roles/secretmanager.secretAccessor"

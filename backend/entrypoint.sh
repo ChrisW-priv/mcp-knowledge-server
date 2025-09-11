@@ -19,16 +19,16 @@ function collect_static() {
   python manage.py collectstatic --no-input
 }
 
-function ensure_super_user() {
+function ensuresuperuser() {
   log "Creating superuser"
-  python manage.py ensure_superuser
+  python manage.py ensuresuperuser
 }
 
 function setup() {
   log "Executing setup scripts"
   migrate
   collect_static
-  ensure_super_user
+  ensuresuperuser
 }
 
 function run_server() {
@@ -51,7 +51,7 @@ function run_celery_worker() {
   celery -A backend.celery worker --loglevel=INFO --pool=gevent --concurrency=4 --logfile=/dev/stdout
 }
 
-functions=("migrate" "collect_static" "ensure_super_user" "setup" "run_server" "run_wsgi" "run_asgi" "run_celery_worker")
+functions=("migrate" "collect_static" "ensuresuperuser" "setup" "run_server" "run_wsgi" "run_asgi" "run_celery_worker")
 
 source /app/.venv/bin/activate
 if [[ "${functions[*]}" =~ (^|[[:space:]])"$1"($|[[:space:]]) ]]; then
