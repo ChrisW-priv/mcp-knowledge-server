@@ -127,7 +127,7 @@ wheels = [
 
 [[package]]
 name = "content-extraction"
-version = "0.4.2"
+version = "0.4.3"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "beautifulsoup4" },
@@ -136,9 +136,9 @@ dependencies = [
     { name = "python-pptx" },
     { name = "requests" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/43/61/2003964432b4240eec5ad4c52e5426845143d9d5b8daf7363599ac577d42/content_extraction-0.4.2.tar.gz", hash = "sha256:b22e3a13632044b752e3b57aabe02b579970fa6e974d34426882216472a8736d", size = 21188, upload-time = "2025-09-11T14:03:18.52Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/a6/b8/b66efa4ad40d28fd3ae3bde672bb0be72eb7f6593b164031a4e11e248b21/content_extraction-0.4.3.tar.gz", hash = "sha256:977c48cdaaa1506d0a87d030b4dda5720c919a6e95c3c2aa49de3009fdc0cac0", size = 21173, upload-time = "2025-09-11T14:25:40.901Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/f3/3d/bde04375c15d09cf267f6265c7f622c38f1adbb6eb562d70d260d490450b/content_extraction-0.4.2-py3-none-any.whl", hash = "sha256:8ee41efb949eecc794c13b3d030bf0a6a38a41beb33e06ad1fc4befa94f08242", size = 22345, upload-time = "2025-09-11T14:03:17.422Z" },
+    { url = "https://files.pythonhosted.org/packages/60/70/4423a93b4d66cd5ca1f892c0affc69ad4a4d8496e90ae5a7b474c701555f/content_extraction-0.4.3-py3-none-any.whl", hash = "sha256:a086f953c106cbb6d6e2fc84652a6e814243d9481e81caf34a09024d17072ad8", size = 22350, upload-time = "2025-09-11T14:25:39.879Z" },
 ]
 
 [[package]]
@@ -537,7 +537,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "casbin", specifier = ">=1.43.0" },
-    { name = "content-extraction", specifier = ">=0.4.2" },
+    { name = "content-extraction", specifier = ">=0.4.3" },
     { name = "django", specifier = ">=5.2.5" },
     { name = "django-content-access-control", specifier = ">=0.3.0" },
     { name = "django-ensuresuperuser", specifier = ">=0.1.0" },

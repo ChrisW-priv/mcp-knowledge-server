@@ -5,7 +5,7 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
-    "content-extraction>=0.4.2",
+    "content-extraction>=0.4.3",
     "django>=5.2.5",
     "django-ensuresuperuser>=0.1.0",
     "djangorestframework>=3.16.1",
