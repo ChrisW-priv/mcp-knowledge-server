@@ -41,11 +41,15 @@ class VectorField(models.Field):
         return json.dumps(value)
 
 
+def upload_to(instance, filename):
+    return f"{instance.owner.username}/{filename}"
+
+
 class KnowledgeSource(ResourceAccessPermissionMixin, models.Model):
     owner = models.ForeignKey(
         settings.AUTH_USER_MODEL, default=1, on_delete=models.CASCADE
     )
-    file = models.FileField()
+    file = models.FileField(upload_to=upload_to)
 
 
 class ChunkVector(models.Model):
