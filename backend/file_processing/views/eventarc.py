@@ -75,8 +75,10 @@ def process_file_to_sections(object_name: str):
     file_id = str(uuid.uuid7())
     output_dir = settings.PRIVATE_MOUNT / PROCESS_RESULTS_FOLDER / file_id
 
-    _, owner_username, _ = object_name.split("/")
-    if not KnowledgeSource.objects.filter(file=object_name).exists():
+    _, owner_username, filename = object_name.split("/")
+    if not KnowledgeSource.objects.filter(
+        file="/".join((owner_username, filename))
+    ).exists():
         """
         It is possible for the file to have been uploaded by a user in an admin panel.
         If that is the case, we already have a KnowledgeSource object for it.
