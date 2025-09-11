@@ -75,10 +75,6 @@ def process_file_to_sections(object_name: str):
     file_id = str(uuid.uuid7())
     output_dir = settings.PRIVATE_MOUNT / PROCESS_RESULTS_FOLDER / file_id
 
-    process_file(
-        input_path=str(settings.PRIVATE_MOUNT / object_name), output_dir=output_dir
-    )
-
     _, owner_id, _ = object_name.split("/")
     if not KnowledgeSource.objects.filter(file__name=object_name).exists():
         """
@@ -89,6 +85,10 @@ def process_file_to_sections(object_name: str):
         ks = KnowledgeSource(owner=User.objects.get(id=owner_id))
         ks.file.name = object_name
         ks.save()
+
+    process_file(
+        input_path=str(settings.PRIVATE_MOUNT / object_name), output_dir=output_dir
+    )
 
     # At this point, the proper output directory has already been created
     with open(output_dir / "METADATA", "w") as f:
