@@ -3,7 +3,14 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, serializers
 from django.conf import settings
+from django.contrib.auth.models import User
 from content_extraction.process import process_file
+import uuid_utils as uuid
+
+from file_processing.models import KnowledgeSource, ChunkVector
+from file_processing.utils import embed_content
+import json
+from functools import partial
 
 
 logger = logging.getLogger(__name__)
@@ -13,7 +20,7 @@ class EventarcMessageSerializer(serializers.Serializer):
     kind = serializers.CharField()
     id = serializers.CharField()
     selfLink = serializers.URLField()
-    name = serializers.CharField()
+    name = serializers.CharField()  # Name of the object within the bucket
     bucket = serializers.CharField()
     generation = serializers.CharField()
     metageneration = serializers.CharField()
@@ -29,6 +36,9 @@ class EventarcMessageSerializer(serializers.Serializer):
     etag = serializers.CharField()
 
 
+PROCESS_RESULTS_FOLDER = "process-results"
+
+
 class EventarcHandler(APIView):
     def post(self, request, format=None):
         serializer = EventarcMessageSerializer(data=request.data)
@@ -36,17 +46,72 @@ class EventarcHandler(APIView):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         # You can process the validated data here
         # For demonstration, just return the validated data
-        filename: str = serializer.validated_data['name']
-        logger.info(f'Recieived request to process {filename=}')
-        if not filename.startswith(settings.UPLOAD_FOLDER_NAME) or filename == f'{settings.UPLOAD_FOLDER_NAME}/':
+        object_name: str = serializer.validated_data["name"]
+        logger.info(f"Recieived request to process {object_name=}")
+        if object_name.endswith("/"):
             """
-            Do not process files that were uploaded to a diff folder than the upload folder
+            If the object is a folder, do nothing
             """
             return Response(status=status.HTTP_204_NO_CONTENT)
+        if object_name.startswith(settings.UPLOAD_FOLDER_NAME):
+            process_file_to_sections(object_name)
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        if (
+            object_name.startswith(PROCESS_RESULTS_FOLDER)
+            and object_name.endswith(".json")
+            and "chunks" in object_name
+        ):
+            index_chunk(object_name)
+            return Response(status=status.HTTP_204_NO_CONTENT)
 
-        full_name = str(settings.PRIVATE_MOUNT / filename)
-        output_dir = settings.PRIVATE_MOUNT / 'process-results'
-        process_file(full_name, output_dir)
-        section_digest_file = output_dir / 'sections.jsonl'
-        logger.info(f'We should now try to process the {section_digest_file=}')
+        """
+        In all other cases, do nothing,
+        for the object is neither a folder nor a file in the correct folder
+        """
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+def process_file_to_sections(object_name: str):
+    file_id = uuid.uuid7()
+    output_dir = settings.PRIVATE_MOUNT / PROCESS_RESULTS_FOLDER / file_id
+    _, owner_id, _ = object_name.split("/")
+    with open(output_dir / "METADATA", "w") as f:
+        f.write(f"Original Filename: {object_name}\n")
+        f.write(f"Original Owner ID: {owner_id}\n")
+
+    ks = KnowledgeSource(owner=User.objects.get(id=owner_id))
+    ks.file.name = object_name
+    ks.save()
+
+    process_file(
+        input_path=str(settings.PRIVATE_MOUNT / object_name), output_dir=output_dir
+    )
+    section_digest_file = output_dir / "sections.jsonl"
+    logger.info(f"We should now try to process the {section_digest_file=}")
+
+
+def insert_vector(object_name, content_embedding):
+    logger.info(f"Started Inserting vector for {object_name=}")
+    vector = content_embedding.values
+    chunk_vector = ChunkVector(file_path=object_name, content_embedding=vector)
+    chunk_vector.save()
+    logger.info(f"Done Inserting vector for {object_name=}")
+
+
+def index_chunk(object_name: str):
+    logger.info(f"Started indexing {object_name=}")
+    file_path = str(settings.PRIVATE_MOUNT / PROCESS_RESULTS_FOLDER / object_name)
+    with open(file_path, "r") as f:
+        data = json.load(f)
+
+    title = data.get("title")
+    text = data.get("text")
+    text_to_embed = text[:255]
+    text_vectors_to_embed = [text_to_embed]
+    if title:
+        text_vectors_to_embed.append(title)
+    embeddings = embed_content(text_vectors_to_embed)
+    insert_vector_to_chunk = partial(insert_vector, object_name)
+    any(map(insert_vector_to_chunk, embeddings))
+
+    logger.info(f"Done indexing {object_name=}")

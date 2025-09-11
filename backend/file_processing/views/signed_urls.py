@@ -1,30 +1,35 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import status
+from rest_framework import status, serializers
 from google.cloud import storage
 from django.conf import settings
 
-import uuid_utils as uuid
+from ..utils import generate_upload_blob_name
+
+
+class EventarcMessageSerializer(serializers.Serializer):
+    filename = serializers.CharField(max_length=255)
 
 
 class SignedURLUploadView(APIView):
     def post(self, request, *args, **kwargs):
+        serializer = EventarcMessageSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
         user = request.user
-
-        # Generate a unique ID for the file to be uploaded
-        # Using uuid4 as uuidv7 is not standard in Python's uuid module
-        file_id = str(uuid.uuid7())
-
-        # Construct the full path in GCS bucket
-        # Assuming user.id is a suitable identifier for folder structure
-        full_path = f'{user.id}/{file_id}'
+        filename = serializer.validated_data["filename"]
 
         try:
             storage_client = storage.Client()
             bucket = storage_client.bucket(settings.UPLOAD_BUCKET_NAME)
-            blob = bucket.blob(full_path)
+            blob_name = generate_upload_blob_name(user.id, filename)
+            blob = bucket.blob(blob_name)
         except Exception as e:
-            return Response({"error": f"GCS client initialization failed: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response(
+                {"error": f"GCS client initialization failed: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
 
         # Generate the signed URL with the x-goog-if-generation-match header
         try:
@@ -32,9 +37,17 @@ class SignedURLUploadView(APIView):
                 version="v4",
                 expiration=3600,  # URL expires in 1 hour
                 method="PUT",
-                headers={"x-goog-if-generation-match": "0"},
-                content_type="application/octet-stream" # Or whatever content type you expect
+                headers={
+                    "x-goog-if-generation-match": "0",
+                },
+                content_type="application/octet-stream",
             )
-            return Response({"signed_url": signed_url, "file_id": file_id}, status=status.HTTP_200_OK)
+            return Response(
+                {"signed_url": signed_url},
+                status=status.HTTP_200_OK,
+            )
         except Exception as e:
-            return Response({"error": f"Failed to generate signed URL: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response(
+                {"error": f"Failed to generate signed URL: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )

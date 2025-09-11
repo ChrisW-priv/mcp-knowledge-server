@@ -16,18 +16,18 @@ class ServiceAccountUser:
 
 class GoogleOIDCAuthentication(BaseAuthentication):
     def authenticate(self, request):
-        auth_header = request.META.get('HTTP_AUTHORIZATION')
-        if not auth_header or not auth_header.startswith('Bearer '):
+        auth_header = request.META.get("HTTP_AUTHORIZATION")
+        if not auth_header or not auth_header.startswith("Bearer "):
             return None  # No Bearer token, let other auth classes try
 
-        token = auth_header[len('Bearer '):]
+        token = auth_header[len("Bearer ") :]
         try:
-            audience = 'https://knowledge-server-obr76apg5a-ez.a.run.app'
+            audience = "https://knowledge-server-obr76apg5a-ez.a.run.app"
             idinfo = id_token.verify_oauth2_token(token, requests.Request(), audience)
-            email = idinfo.get('email')
+            email = idinfo.get("email")
             if not email:
-                raise exceptions.AuthenticationFailed('No email in token')
+                raise exceptions.AuthenticationFailed("No email in token")
             user = ServiceAccountUser(email)
             return (user, None)
         except Exception as e:
-            raise exceptions.AuthenticationFailed(f'Invalid OIDC token: {e}')
+            raise exceptions.AuthenticationFailed(f"Invalid OIDC token: {e}")
