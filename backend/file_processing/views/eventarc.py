@@ -76,16 +76,15 @@ def process_file_to_sections(object_name: str):
     output_dir = settings.PRIVATE_MOUNT / PROCESS_RESULTS_FOLDER / file_id
 
     _, owner_username, filename = object_name.split("/")
-    if not KnowledgeSource.objects.filter(
-        file="/".join((owner_username, filename))
-    ).exists():
+    file_db_name = "/".join((owner_username, filename))
+    if not KnowledgeSource.objects.filter(file=file_db_name).exists():
         """
         It is possible for the file to have been uploaded by a user in an admin panel.
         If that is the case, we already have a KnowledgeSource object for it.
         But if not, we need to create one:
         """
         ks = KnowledgeSource(owner=User.objects.get(username=owner_username))
-        ks.file.name = object_name
+        ks.file.name = file_db_name
         ks.save()
 
     process_file(
@@ -116,10 +115,13 @@ def index_chunk(object_name: str):
 
     title = data.get("title")
     text = data.get("text")
-    text_to_embed = text[:255]
-    text_vectors_to_embed = [text_to_embed]
+    text_vectors_to_embed = []
     if title:
         text_vectors_to_embed.append(title)
+    text_to_embed = text[:255]
+    if text_to_embed:
+        text_vectors_to_embed.append(text_to_embed)
+    text_vectors_to_embed = [text_to_embed]
     embeddings = embed_content(text_vectors_to_embed)
     insert_vector_to_chunk = partial(insert_vector, object_name)
     any(map(insert_vector_to_chunk, embeddings))
