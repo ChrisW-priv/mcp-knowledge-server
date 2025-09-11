@@ -109,7 +109,7 @@ def insert_vector(object_name, content_embedding):
 
 def index_chunk(object_name: str):
     logger.info(f"Started indexing {object_name=}")
-    file_path = str(settings.PRIVATE_MOUNT / PROCESS_RESULTS_FOLDER / object_name)
+    file_path = str(settings.PRIVATE_MOUNT / object_name)
     with open(file_path, "r") as f:
         data = json.load(f)
 
