@@ -1,0 +1,20 @@
+import os
+
+
+SECURE_SSL_REDIRECT = True
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
+K_SERVICE = os.environ.get("K_SERVICE")
+GOOGLE_CLOUD_REGION = os.environ.get("GOOGLE_CLOUD_REGION")
+GOOGLE_CLOUD_PROJECT = os.environ.get("GOOGLE_CLOUD_PROJECT")
+
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:8000",
+    "http://127.0.0.1:8000",
+]
+
+if all([K_SERVICE, GOOGLE_CLOUD_REGION, GOOGLE_CLOUD_PROJECT]):
+    service_url = (
+        f"https://{K_SERVICE}-{GOOGLE_CLOUD_PROJECT}.{GOOGLE_CLOUD_REGION}.run.app"
+    )
+    CSRF_TRUSTED_ORIGINS.append(service_url)
