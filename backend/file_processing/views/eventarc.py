@@ -11,6 +11,7 @@ from file_processing.models import KnowledgeSource, ChunkVector
 from file_processing.utils import embed_content
 import json
 from functools import partial
+from pathlib import Path
 
 
 logger = logging.getLogger(__name__)
@@ -99,10 +100,10 @@ def process_file_to_sections(object_name: str):
     logger.info(f"We should now try to process the {section_digest_file=}")
 
 
-def insert_vector(object_name, content_embedding):
+def insert_vector(object_name, knowledge_source, content_embedding):
     logger.info(f"Started Inserting vector for {object_name=}")
     vector = content_embedding.values
-    cv = ChunkVector(vector=vector)
+    cv = ChunkVector(knowledge_source=knowledge_source, vector=vector)
     cv.file.name = object_name
     cv.save()
     logger.info(f"Done Inserting vector for {object_name=}")
@@ -114,6 +115,14 @@ def index_chunk(object_name: str):
     with open(file_path, "r") as f:
         data = json.load(f)
 
+    path_to_metadata = Path(object_name).parent.parent / "METADATA"
+    with open(path_to_metadata, "r") as f:
+        metadata = f.read()
+    text_to_find = "Original Filename: "
+    position_start = metadata.find(text_to_find)
+    filename = metadata[position_start + len(text_to_find) : metadata.find("\n")]
+    ks_filename = filename[len("django-uploads/") :]
+    ks = KnowledgeSource.objects.get(file=ks_filename)
     title = data.get("title")
     text = data.get("text")
     text_vectors_to_embed = []
@@ -124,7 +133,7 @@ def index_chunk(object_name: str):
         text_vectors_to_embed.append(text_to_embed)
     text_vectors_to_embed = [text_to_embed]
     embeddings = embed_content(text_vectors_to_embed)
-    insert_vector_to_chunk = partial(insert_vector, object_name)
+    insert_vector_to_chunk = partial(insert_vector, object_name, ks)
     any(map(insert_vector_to_chunk, embeddings))
 
     logger.info(f"Done indexing {object_name=}")
