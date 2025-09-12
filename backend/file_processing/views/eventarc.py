@@ -12,6 +12,7 @@ from file_processing.utils import embed_content
 import json
 from functools import partial
 from pathlib import Path
+import os
 
 
 logger = logging.getLogger(__name__)
@@ -88,14 +89,15 @@ def process_file_to_sections(object_name: str):
         ks.file.name = file_db_name
         ks.save()
 
+    os.makedirs(output_dir, exist_ok=True)
+    with open(output_dir / "METADATA", "w") as f:
+        f.write(f"Original Filename: {object_name}\n")
+        f.write(f"Original Owner ID: {owner_username}\n")
+
     process_file(
         input_path=str(settings.PRIVATE_MOUNT / object_name), output_dir=output_dir
     )
 
-    # At this point, the proper output directory has already been created
-    with open(output_dir / "METADATA", "w") as f:
-        f.write(f"Original Filename: {object_name}\n")
-        f.write(f"Original Owner ID: {owner_username}\n")
     section_digest_file = output_dir / "sections.jsonl"
     logger.info(f"We should now try to process the {section_digest_file=}")
 
@@ -115,7 +117,9 @@ def index_chunk(object_name: str):
     with open(file_path, "r") as f:
         data = json.load(f)
 
-    path_to_metadata = Path(object_name).parent.parent / "METADATA"
+    path_to_metadata = (
+        settings.PRIVATE_MOUNT / Path(object_name).parent.parent / "METADATA"
+    )
     with open(path_to_metadata, "r") as f:
         metadata = f.read()
     text_to_find = "Original Filename: "
