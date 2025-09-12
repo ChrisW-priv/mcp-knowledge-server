@@ -102,8 +102,9 @@ def process_file_to_sections(object_name: str):
 def insert_vector(object_name, content_embedding):
     logger.info(f"Started Inserting vector for {object_name=}")
     vector = content_embedding.values
-    chunk_vector = ChunkVector(file_path=object_name, content_embedding=vector)
-    chunk_vector.save()
+    cv = ChunkVector(vector=vector)
+    cv.file.name = object_name
+    cv.save()
     logger.info(f"Done Inserting vector for {object_name=}")
 
 
