@@ -1,6 +1,9 @@
 from django.db import models
 from django.conf import settings
-from content_access_control.policy_mixins import ResourceAccessPermissionMixin
+from content_access_control.policy_mixins import (
+    ResourceAccessPermissionMixin,
+    ObjectIdentifierMixin,
+)
 import json
 
 
@@ -45,14 +48,16 @@ def upload_to(instance, filename):
     return f"{instance.owner.username}/{filename}"
 
 
-class KnowledgeSource(ResourceAccessPermissionMixin, models.Model):
+class KnowledgeSource(
+    ResourceAccessPermissionMixin, ObjectIdentifierMixin, models.Model
+):
     owner = models.ForeignKey(
         settings.AUTH_USER_MODEL, default=1, on_delete=models.CASCADE
     )
     file = models.FileField(upload_to=upload_to)
 
 
-class ChunkVector(models.Model):
+class ChunkVector(ObjectIdentifierMixin, models.Model):
     knowledge_source = models.ForeignKey(KnowledgeSource, on_delete=models.CASCADE)
     file = models.FileField()
     vector = VectorField(null=True, blank=False)

@@ -47,7 +47,7 @@ variable "ai_api_key" {
 variable "ai_api_key_env_var_name" {
   description = "The name of the environment variable to use for the AI API key in the Cloud Run container."
   type        = string
-  default     = "GEMINI_API_KEY"
+  default     = "OPENAI_API_KEY"
 }
 
 variable "docker_image_tag" {

@@ -127,8 +127,8 @@ def index_chunk(object_name: str):
     filename = metadata[position_start + len(text_to_find) : metadata.find("\n")]
     ks_filename = filename[len("django-uploads/") :]
     ks = KnowledgeSource.objects.get(file=ks_filename)
-    title = data.get("title")
-    text = data.get("text")
+    title = data.get("title", "")
+    text = data.get("text", "")
     text_vectors_to_embed = []
     if title:
         text_vectors_to_embed.append(title)
