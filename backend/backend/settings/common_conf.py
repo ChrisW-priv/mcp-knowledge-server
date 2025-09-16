@@ -32,6 +32,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "django_ensuresuperuser",
     "rest_framework",
+    "rest_framework.authtoken",
     "rest_framework_simplejwt",
     "content_access_control",
     "file_processing",
