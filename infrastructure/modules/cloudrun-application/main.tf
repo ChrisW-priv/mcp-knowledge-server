@@ -218,6 +218,10 @@ resource "google_storage_bucket_iam_member" "uploads_admin_sa" {
 resource "null_resource" "wait_for_migration" {
   depends_on = [google_cloud_run_v2_job.backend_setup_job]
 
+  triggers = {
+    always_run = timestamp() # changes on every plan/apply
+  }
+
   provisioner "local-exec" {
     command = "gcloud run jobs execute backend-setup --wait --region=${var.google_region} --project=${var.google_project_id}"
   }
