@@ -2,6 +2,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, serializers
 from google.cloud import storage
+from google.auth import default, impersonated_credentials
 from django.conf import settings
 
 from ..utils import generate_upload_blob_name
@@ -20,8 +21,18 @@ class SignedURLUploadView(APIView):
         user = request.user
         filename = serializer.validated_data["filename"]
 
+        source_credentials, _ = default()
+        service_account_email = source_credentials.service_account_email
+
+        target_credentials = impersonated_credentials.Credentials(
+            source_credentials=source_credentials,
+            target_principal=service_account_email,
+            target_scopes=["https://www.googleapis.com/auth/cloud-platform"],
+        )
+
+        # Use impersonated credentials (no extra parameters needed)
         try:
-            storage_client = storage.Client()
+            storage_client = storage.Client(credentials=target_credentials)
             bucket = storage_client.bucket(settings.UPLOAD_BUCKET_NAME)
             blob_name = generate_upload_blob_name(user.id, filename)
             blob = bucket.blob(blob_name)
