@@ -149,12 +149,6 @@ resource "google_project_iam_member" "cloudrun_sa_cloudsql_client" {
   member  = "serviceAccount:${local.cloudrun_service_account.email}"
 }
 
-resource "google_project_iam_member" "cloudrun_sa_token_creator" {
-  project = var.google_project_id
-  role    = "roles/iam.serviceAccountTokenCreator"
-  member  = "serviceAccount:${local.cloudrun_service_account.email}"
-}
-
 resource "google_project_iam_member" "cloudrun_sa_cloudsql_viewer" {
   project = var.google_project_id
   role    = "roles/cloudsql.viewer"
