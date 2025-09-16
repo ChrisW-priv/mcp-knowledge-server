@@ -2,8 +2,11 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, serializers
 from google.cloud import storage
-from google.auth import default, impersonated_credentials
+from google.auth import default
+from google.auth.transport import requests as auth_requests
 from django.conf import settings
+import requests
+from datetime import timedelta
 
 from ..utils import generate_upload_blob_name
 
@@ -21,44 +24,38 @@ class SignedURLUploadView(APIView):
         user = request.user
         filename = serializer.validated_data["filename"]
 
-        source_credentials, _ = default()
-        service_account_email = source_credentials.service_account_email
-
-        target_credentials = impersonated_credentials.Credentials(
-            source_credentials=source_credentials,
-            target_principal=service_account_email,
-            target_scopes=["https://www.googleapis.com/auth/cloud-platform"],
-        )
-
-        # Use impersonated credentials (no extra parameters needed)
         try:
-            storage_client = storage.Client(credentials=target_credentials)
+            credentials, project = default()
+
+            # Refresh credentials to get access token
+            auth_request = auth_requests.Request()
+            credentials.refresh(auth_request)
+
+            # Get service account email from metadata service
+            metadata_url = "http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/email"
+            headers = {"Metadata-Flavor": "Google"}
+            response = requests.get(metadata_url, headers=headers, timeout=5)
+            service_account_email = response.text.strip()
+
+            storage_client = storage.Client(credentials=credentials)
             bucket = storage_client.bucket(settings.UPLOAD_BUCKET_NAME)
             blob_name = generate_upload_blob_name(user.id, filename)
             blob = bucket.blob(blob_name)
-        except Exception as e:
-            return Response(
-                {"error": f"GCS client initialization failed: {str(e)}"},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            )
 
-        # Generate the signed URL with the x-goog-if-generation-match header
-        try:
+            # Use IAM-based signing instead
             signed_url = blob.generate_signed_url(
                 version="v4",
-                expiration=3600,  # URL expires in 1 hour
+                expiration=timedelta(hours=1),
                 method="PUT",
                 headers={
                     "x-goog-if-generation-match": "0",
                 },
                 content_type="application/octet-stream",
+                service_account_email=service_account_email,
+                access_token=credentials.token,
             )
-            return Response(
-                {"signed_url": signed_url},
-                status=status.HTTP_200_OK,
-            )
+
+            return Response({"signed_url": signed_url}, status=200)
+
         except Exception as e:
-            return Response(
-                {"error": f"Failed to generate signed URL: {str(e)}"},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            )
+            return Response({"error": str(e)}, status=500)
