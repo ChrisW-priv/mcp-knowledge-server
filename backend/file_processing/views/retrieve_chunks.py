@@ -24,7 +24,7 @@ def chunk_content(chunk_name: str):
 
 
 class RetrieveChunksAPIView(APIView):
-    def get(self, request, *args, **kwargs):
+    def post(self, request, *args, **kwargs):
         serializer = RetrieveChunkSerializer(data=request.data)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
