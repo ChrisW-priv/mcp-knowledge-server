@@ -25,7 +25,7 @@ class SignedURLUploadView(APIView):
         filename = serializer.validated_data["filename"]
 
         try:
-            credentials, project = default()
+            credentials, _ = default()
 
             # Refresh credentials to get access token
             auth_request = auth_requests.Request()
