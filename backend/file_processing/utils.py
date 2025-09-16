@@ -6,8 +6,8 @@ from django.db.models.expressions import RawSQL
 from file_processing.models import ChunkVector
 
 
-def generate_upload_blob_name(user_id, file_name):
-    return f"django-uploads/{user_id}/{file_name}"
+def generate_upload_blob_name(username, file_name):
+    return f"django-uploads/{username}/{file_name}"
 
 
 def embed_content(content: str | list[str]) -> list[float]:

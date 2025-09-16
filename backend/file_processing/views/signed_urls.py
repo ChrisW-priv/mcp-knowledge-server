@@ -39,7 +39,7 @@ class SignedURLUploadView(APIView):
 
             storage_client = storage.Client(credentials=credentials)
             bucket = storage_client.bucket(settings.UPLOAD_BUCKET_NAME)
-            blob_name = generate_upload_blob_name(user.id, filename)
+            blob_name = generate_upload_blob_name(user.username, filename)
             blob = bucket.blob(blob_name)
 
             # Use IAM-based signing instead
