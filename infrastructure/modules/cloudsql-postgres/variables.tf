@@ -36,8 +36,3 @@ variable "db_password_secret_id" {
   type        = string
   default     = ""
 }
-
-variable "vpc_network" {
-  description = "The VPC network to which the Cloud SQL instance is connected. Used for private IP."
-  type        = string
-}

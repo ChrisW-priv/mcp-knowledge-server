@@ -54,25 +54,10 @@ locals {
 }
 
 # -------------------------------------------------------------------------------------
-# VPC Network
-# Creates a VPC network and subnetwork for private connectivity.
-# -------------------------------------------------------------------------------------
-module "vpc_network" {
-  depends_on = [
-    google_project_service.service
-  ]
-  source                   = "./modules/vpc-network"
-  google_project_id        = var.google_project_id
-  google_region            = var.google_region
-  network_name             = "main-vpc-network"
-  subnetwork_name          = "main-subnetwork"
-  subnetwork_ip_cidr_range = "10.0.0.0/20" # Adjust this CIDR range if needed
-}
 
 module "cloudsql_postgres" {
   depends_on = [
     google_project_service.service,
-    module.vpc_network # Add dependency on VPC network module
   ]
   source                = "./modules/cloudsql-postgres"
   google_project_id     = var.google_project_id
@@ -81,7 +66,6 @@ module "cloudsql_postgres" {
   db_user               = local.db_username
   db_password_secret_id = var.db_password_secret_id
   database_name         = "postgres"
-  vpc_network           = module.vpc_network.vpc_network_self_link
 }
 
 # -------------------------------------------------------------------------------------
