@@ -3,7 +3,7 @@ name = "mcp-knowledge-server"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = ">=3.13.5"
 dependencies = [
     "content-extraction>=0.4.4",
     "django>=5.2.5",
@@ -20,7 +20,7 @@ dependencies = [
     "openai>=1.107.2",
     "mcp[cli]>=1.14.0",
     "httpx>=0.28.1",
-    "fast-agent-mcp>=0.2.25",
+    "fast-agent-mcp>=0.3.6",
 ]
 
 [dependency-groups]

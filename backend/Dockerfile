@@ -1,5 +1,5 @@
 # This Dockerfile will build backend for app assuming the build context is the root of project directory
-FROM ghcr.io/astral-sh/uv@sha256:0a5c60f84655a2d331b5280955abb0104dbea7188d7bb4749bbb13a1bbd90119 AS base
+FROM ghcr.io/astral-sh/uv:python3.13-bookworm-slim@sha256:fcb50226f56cc30eb2d9fab234e1d15c2f26103b84b15d6e39ba75ed17c71876 AS base
 
 WORKDIR /app
 
