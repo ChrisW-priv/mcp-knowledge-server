@@ -2,6 +2,8 @@ from openai import OpenAI
 from content_access_control import core
 from django.db.models.query import QuerySet
 from django.db.models.expressions import RawSQL
+from django.conf import settings
+import json
 
 from file_processing.models import ChunkVector
 
@@ -68,3 +70,20 @@ def sort_chunks_by_relevance(
     return chunks.annotate(distance=RawSQL("vector <=> %s", [str(embedding)])).order_by(
         "distance"
     )
+
+
+def chunk_content(chunk_name: str):
+    path = settings.PRIVATE_MOUNT / chunk_name
+    with open(path) as f:
+        file = json.load(f)
+    return file.get("text", "")
+
+
+def retrieve_relevant_chunks_subject_filtered(subject: str, query: str, top_k: int):
+    chunks_accessible = filter_chunks_by_subject_access(subject)
+    embedding = embed_content(query)
+    sorted = sort_chunks_by_relevance(chunks_accessible, embedding)
+    file_names = [chunk.file.name for chunk in sorted[:top_k]]
+    contents = map(chunk_content, file_names)
+    filtered_non_empty = list(map(lambda chunk: chunk, contents))
+    return filtered_non_empty

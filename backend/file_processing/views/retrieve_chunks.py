@@ -1,26 +1,13 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, serializers
-from django.conf import settings
-import json
 
-from file_processing.utils import (
-    embed_content,
-    filter_chunks_by_subject_access,
-    sort_chunks_by_relevance,
-)
+from file_processing.utils import retrieve_relevant_chunks_subject_filtered
 
 
 class RetrieveChunkSerializer(serializers.Serializer):
     query = serializers.CharField()
     top_k = serializers.IntegerField(default=20, min_value=1, max_value=100)
-
-
-def chunk_content(chunk_name: str):
-    path = settings.PRIVATE_MOUNT / chunk_name
-    with open(path) as f:
-        file = json.load(f)
-    return file.get("text", "")
 
 
 class RetrieveChunksAPIView(APIView):
@@ -33,12 +20,9 @@ class RetrieveChunksAPIView(APIView):
         query = serializer.validated_data["query"]
         top_k = serializer.validated_data["top_k"]
 
-        chunks_accessible = filter_chunks_by_subject_access(user.username)
-        embedding = embed_content(query)
-        sorted = sort_chunks_by_relevance(chunks_accessible, embedding)
-        file_names = [chunk.file.name for chunk in sorted[:top_k]]
-        contents = map(chunk_content, file_names)
-        filtered_non_empty = list(map(lambda chunk: chunk, contents))
+        filtered_non_empty = retrieve_relevant_chunks_subject_filtered(
+            user.username, query, top_k
+        )
         return Response(
             {
                 "contents": filtered_non_empty,
