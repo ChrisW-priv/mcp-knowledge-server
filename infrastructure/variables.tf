@@ -54,3 +54,10 @@ variable "docker_image_tag" {
   description = "Tag of the image that should be used"
   type        = string
 }
+
+variable "ks_token" {
+  description = "Token to be used for auth for the Knowledge Server"
+  type        = string
+  default     = "TODO:CHANGEME"
+  sensitive   = true
+}

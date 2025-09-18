@@ -48,6 +48,27 @@ resource "google_secret_manager_secret_version" "ai_api_key_version" {
   secret_data = var.ai_api_key
 }
 
+resource "google_secret_manager_secret" "ks_token_secret" {
+  depends_on = [
+    google_project_service.service
+  ]
+  project   = var.google_project_id
+  secret_id = "ks-token-secret"
+
+  replication {
+    user_managed {
+      replicas {
+        location = var.google_region
+      }
+    }
+  }
+}
+
+resource "google_secret_manager_secret_version" "ks_token_version" {
+  secret      = google_secret_manager_secret.ks_token_secret.id
+  secret_data = var.ks_token
+}
+
 locals {
   effective_ai_token_secret_id = var.ai_token_secret_id != "" ? var.ai_token_secret_id : google_secret_manager_secret.ai_api_key_secret[0].secret_id
   db_username                  = "postgres"
@@ -115,6 +136,10 @@ module "cloudrun-application" {
     {
       name      = var.ai_api_key_env_var_name
       secret_id = local.effective_ai_token_secret_id
+    },
+    {
+      name      = "KNOWLEDGE_USER_TOKEN"
+      secret_id = google_secret_manager_secret.ks_token_secret.secret_id
     }
   ]
 }

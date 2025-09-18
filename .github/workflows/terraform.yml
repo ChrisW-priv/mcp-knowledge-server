@@ -44,4 +44,4 @@ jobs:
         run: cd infrastructure && terraform init
 
       - name: Terraform Apply
-        run: cd infrastructure && TF_VAR_ai_api_key=${{ secrets.OPENAI_API_KEY }} TF_VAR_docker_image_tag=${{ github.sha}} terraform apply -auto-approve -var-file=./environments/deployed.tfvars
+        run: cd infrastructure && TF_VAR_ks_token=${{ secrets.KS_TOKEN }} TF_VAR_ai_api_key=${{ secrets.OPENAI_API_KEY }} TF_VAR_docker_image_tag=${{ github.sha}} terraform apply -auto-approve -var-file=./environments/deployed.tfvars
