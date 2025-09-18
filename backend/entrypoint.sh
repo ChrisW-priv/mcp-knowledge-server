@@ -3,6 +3,8 @@
 set -o errexit
 set -o pipefail
 
+source /app/.venv/bin/activate
+
 # Logging function
 function log() {
   echo "[$(date +'%Y-%m-%d %H:%M:%S')] $1"
