@@ -18,6 +18,9 @@ dependencies = [
     "django-content-access-control>=0.3.0",
     "casbin>=1.43.0",
     "openai>=1.107.2",
+    "mcp[cli]>=1.14.0",
+    "httpx>=0.28.1",
+    "fast-agent-mcp>=0.2.25",
 ]
 
 [dependency-groups]

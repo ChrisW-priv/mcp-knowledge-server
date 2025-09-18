@@ -22,6 +22,7 @@ COPY --from=base /app /app
 WORKDIR /app/backend
 
 COPY backend/ /app/backend
+COPY mcp/ /app/mcp
 
 COPY backend/backend/deployed_settings/ /app/backend/backend/settings/
 

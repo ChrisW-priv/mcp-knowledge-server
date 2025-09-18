@@ -18,9 +18,9 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import include, path
 
-from file_processing import urls as file_processing_urls
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("", include(file_processing_urls)),
+    path("", include("file_processing.urls")),
+    path("", include("rag_responses.urls")),
 ]

@@ -36,6 +36,7 @@ INSTALLED_APPS = [
     "rest_framework_simplejwt",
     "content_access_control",
     "file_processing",
+    "rag_responses",
 ]
 
 MIDDLEWARE = [
