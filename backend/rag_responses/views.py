@@ -92,24 +92,15 @@ class ChatView(APIView):
             )
 
         # Log the message to the database
-        now = datetime.now()
         ChatMessage.objects.create(
             user=user,
             chat_id=chat_id,
             content=content,
-            timestamp=now,
+            timestamp=datetime.now(),
         )
 
         messages_adapted = build_agent_messages(content, messages)
         chat_response = asyncio.run(agent_response(messages_adapted))
-
-        now = datetime.now()
-        ChatMessage.objects.create(
-            user=user,
-            chat_id=chat_id,
-            content=content,
-            timestamp=now,
-        )
 
         llm_user, _ = User.objects.get_or_create(username="assistant")
         chat_response_message = chat_response.content[0].text
