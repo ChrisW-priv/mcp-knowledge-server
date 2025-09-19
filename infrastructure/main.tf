@@ -142,8 +142,8 @@ module "cloudrun-application" {
       secret_id = google_secret_manager_secret.ks_token_secret.secret_id
     },
     {
-      name      = "KNOWLEDGE_URL_BASE"
-      secret_id = "https://knowledge-server-372502133685.europe-west4.run.app/"
+      name  = "KNOWLEDGE_URL_BASE"
+      value = "https://knowledge-server-372502133685.europe-west4.run.app/"
     }
   ]
 }
