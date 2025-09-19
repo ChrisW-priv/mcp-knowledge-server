@@ -17,9 +17,9 @@ default_model: gpt-4o
 
 # Logging and Console Configuration:
 logger:
-  # level: "debug" | "info" | "warning" | "error"
-  # type: "none" | "console" | "file" | "http"
-  # path: "/path/to/logfile.jsonl"
+  # level: "debug"
+  # type: "file"
+  # path: "fast-agent-logfile.jsonl"
 
   # Switch the progress display on or off
   progress_display: false
@@ -33,4 +33,7 @@ mcp:
   servers:
     knowledge:
       command: "python3"
-      args: ["/app/mcp/knowledge.py"]
+      args: ["${PWD}/../mcp/knowledge.py"]
+      env:
+        KNOWLEDGE_USER_TOKEN: "${KNOWLEDGE_USER_TOKEN}"
+        KNOWLEDGE_URL_BASE: "${KNOWLEDGE_URL_BASE}"
