@@ -75,7 +75,7 @@ def chunk_content(chunk_name: str):
     path = settings.PRIVATE_MOUNT / chunk_name
     with open(path) as f:
         file = json.load(f)
-    return file.get("text", "")
+    return file.get("answer", "")
 
 
 def retrieve_relevant_queries_subject_filtered(subject: str, query: str, top_k: int):

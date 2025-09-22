@@ -5,14 +5,14 @@ from rest_framework import status, serializers
 from file_processing.utils import retrieve_relevant_queries_subject_filtered
 
 
-class RetrieveChunkSerializer(serializers.Serializer):
+class RetrieveTextForQuerySerializer(serializers.Serializer):
     query = serializers.CharField()
     top_k = serializers.IntegerField(default=20, min_value=1, max_value=100)
 
 
-class RetrieveChunksAPIView(APIView):
+class RetrieveTextForQueryAPIView(APIView):
     def post(self, request, *args, **kwargs):
-        serializer = RetrieveChunkSerializer(data=request.data)
+        serializer = RetrieveTextForQuerySerializer(data=request.data)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 

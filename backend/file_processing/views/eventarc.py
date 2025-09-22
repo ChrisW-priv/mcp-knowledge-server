@@ -1,4 +1,6 @@
+from dataclasses import dataclass, asdict
 import logging
+from typing import Iterable
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, serializers
@@ -117,9 +119,50 @@ def insert_vector(object_name, knowledge_source, content_embedding):
 
 def index_chunk(object_name: str):
     logger.info(f"Started indexing {object_name=}")
+    queries = generate_queries(object_name)
+    path_to_file_processing_root = (
+        settings.PRIVATE_MOUNT / Path(object_name).parent.parent
+    )
+    path_to_queries = path_to_file_processing_root / "queries"
+    os.mkdir(path_to_queries, exist_ok=True)
+    for i, query in enumerate(queries):
+        with open(path_to_queries / f"{i}.json", "w") as f:
+            json.dump(asdict(query), f)
+
+
+@dataclass
+class Query:
+    query: str
+    answer: str
+
+
+def generate_queries(object_name: str) -> Iterable[Query]:
+    """
+    Returns an Iterable[dict] of query and answer for a given object_name.
+    """
     file_path = str(settings.PRIVATE_MOUNT / object_name)
     with open(file_path, "r") as f:
         data = json.load(f)
+    title = data.get("title")
+    if not title:
+        raise ValueError(f"Title not found in {object_name}")
+    text = data.get("text")
+    if not text:
+        raise ValueError(f"Text not found in {object_name}")
+
+    if title and text:
+        yield Query(title, text)
+        yield Query(text, text)
+
+
+def process_query(object_name: str):
+    file_path = str(settings.PRIVATE_MOUNT / object_name)
+    with open(file_path, "r") as f:
+        data: dict[str, str] = json.load(f)
+
+    query = data.get("query")
+    if not query:
+        raise ValueError(f"Query not found in {object_name}")
 
     path_to_metadata = (
         settings.PRIVATE_MOUNT / Path(object_name).parent.parent / "METADATA"
@@ -131,16 +174,7 @@ def index_chunk(object_name: str):
     filename = metadata[position_start + len(text_to_find) : metadata.find("\n")]
     ks_filename = filename[len("django-uploads/") :]
     ks = KnowledgeSource.objects.get(file=ks_filename)
-    title = data.get("title", "")
-    text = data.get("text", "")
-    text_vectors_to_embed = []
-    if title:
-        text_vectors_to_embed.append(title)
-    text_to_embed = text[:255]
-    if text_to_embed:
-        text_vectors_to_embed.append(text_to_embed)
-    text_vectors_to_embed = [text_to_embed]
-    embeddings = embed_content(text_vectors_to_embed)
+    embeddings = embed_content(query)
     insert_vector_to_chunk = partial(insert_vector, object_name, ks)
     any(map(insert_vector_to_chunk, embeddings))
 
