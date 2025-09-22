@@ -40,7 +40,7 @@ class EventarcMessageSerializer(serializers.Serializer):
     etag = serializers.CharField()
 
 
-PROCESS_RESULTS_FOLDER = "process-results"
+PROCESS_RESULTS_FOLDER = Path("process-results")
 
 
 class EventarcHandler(APIView):
@@ -61,11 +61,18 @@ class EventarcHandler(APIView):
             process_file_to_sections(object_name)
             return Response(status=status.HTTP_204_NO_CONTENT)
         if (
-            object_name.startswith(PROCESS_RESULTS_FOLDER)
+            object_name.startswith(str(PROCESS_RESULTS_FOLDER / "chunks"))
             and object_name.endswith(".json")
             and "chunks" in object_name
         ):
             index_chunk(object_name)
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        if (
+            object_name.startswith(str(PROCESS_RESULTS_FOLDER / "queries"))
+            and object_name.endswith(".json")
+            and "queries" in object_name
+        ):
+            process_query(object_name)
             return Response(status=status.HTTP_204_NO_CONTENT)
 
         """
