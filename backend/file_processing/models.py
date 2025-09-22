@@ -49,6 +49,7 @@ class VectorField(models.Field):
 
 
 def upload_to(instance, filename):
+    """Function that returns the path to upload the file to, based on who is uploading the file"""
     return f"{instance.owner.username}/{filename}"
 
 
