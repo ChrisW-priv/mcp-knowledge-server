@@ -40,7 +40,7 @@ class EventarcMessageSerializer(serializers.Serializer):
     etag = serializers.CharField()
 
 
-PROCESS_RESULTS_FOLDER = Path("process-results")
+PROCESS_RESULTS_FOLDER = "process-results"
 
 
 class EventarcHandler(APIView):
@@ -61,14 +61,14 @@ class EventarcHandler(APIView):
             process_file_to_sections(object_name)
             return Response(status=status.HTTP_204_NO_CONTENT)
         if (
-            object_name.startswith(str(PROCESS_RESULTS_FOLDER / "chunks"))
+            object_name.startswith(PROCESS_RESULTS_FOLDER)
             and object_name.endswith(".json")
             and "chunks" in object_name
         ):
             index_chunk(object_name)
             return Response(status=status.HTTP_204_NO_CONTENT)
         if (
-            object_name.startswith(str(PROCESS_RESULTS_FOLDER / "queries"))
+            object_name.startswith(PROCESS_RESULTS_FOLDER)
             and object_name.endswith(".json")
             and "queries" in object_name
         ):
@@ -125,6 +125,9 @@ def insert_vector(object_name, knowledge_source, content_embedding):
 
 
 def index_chunk(object_name: str):
+    """
+    Indexes a chunk of data by generating queries and saving them to a file.
+    """
     logger.info(f"Started indexing {object_name=}")
     queries = generate_queries(object_name)
     path_to_file_processing_root = (
@@ -132,9 +135,12 @@ def index_chunk(object_name: str):
     )
     path_to_queries = path_to_file_processing_root / "queries"
     os.mkdir(path_to_queries, exist_ok=True)
+    logger.info(f"Created {path_to_queries=}")
     for i, query in enumerate(queries):
         with open(path_to_queries / f"{i}.json", "w") as f:
             json.dump(asdict(query), f)
+            logger.info(f"Saved query {i} to {path_to_queries}")
+    logger.info(f"Finished indexing {object_name=}")
 
 
 @dataclass
