@@ -2,7 +2,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, serializers
 
-from file_processing.utils import retrieve_relevant_chunks_subject_filtered
+from file_processing.utils import retrieve_relevant_queries_subject_filtered
 
 
 class RetrieveChunkSerializer(serializers.Serializer):
@@ -20,7 +20,7 @@ class RetrieveChunksAPIView(APIView):
         query = serializer.validated_data["query"]
         top_k = serializer.validated_data["top_k"]
 
-        filtered_non_empty = retrieve_relevant_chunks_subject_filtered(
+        filtered_non_empty = retrieve_relevant_queries_subject_filtered(
             user.username, query, top_k
         )
         return Response(

@@ -62,10 +62,11 @@ class KnowledgeSource(
     file = models.FileField(upload_to=upload_to)
 
 
-class ChunkVector(ObjectIdentifierMixin, models.Model):
+class QueryVector(ObjectIdentifierMixin, models.Model):
     knowledge_source = models.ForeignKey(KnowledgeSource, on_delete=models.CASCADE)
     file = models.FileField()
     vector = VectorField(null=True, blank=False)
+    embedding_model = models.CharField(max_length=255)
 
 
 @receiver(post_save, sender=settings.AUTH_USER_MODEL)

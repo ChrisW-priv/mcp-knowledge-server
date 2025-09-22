@@ -1,10 +1,6 @@
 from django.contrib import admin
-from .models import ChunkVector, KnowledgeSource
+from .models import KnowledgeSource
 from content_access_control.admin_permission import register_permission_admin
-
-
-@admin.register(ChunkVector)
-class ChunkVectorAdmin(admin.ModelAdmin): ...
 
 
 @admin.register(KnowledgeSource)

@@ -5,7 +5,7 @@ from django.db.models.expressions import RawSQL
 from django.conf import settings
 import json
 
-from file_processing.models import ChunkVector
+from file_processing.models import QueryVector
 
 
 def generate_upload_blob_name(username, file_name):
@@ -58,18 +58,17 @@ def subject_accessible_knowledge_sources(subject_identifier: str):
     return ks_ids
 
 
-def filter_chunks_by_subject_access(subject_identifier: str) -> QuerySet[ChunkVector]:
+def filter_queries_by_subject_access(subject_identifier: str) -> QuerySet[QueryVector]:
     ks_ids = subject_accessible_knowledge_sources(subject_identifier)
-    chunks = ChunkVector.objects.filter(knowledge_source__id__in=ks_ids)
-    return chunks
+    return QueryVector.objects.filter(knowledge_source__id__in=ks_ids)
 
 
-def sort_chunks_by_relevance(
-    chunks: QuerySet[ChunkVector], embedding: list[float]
-) -> QuerySet[ChunkVector]:
-    return chunks.annotate(distance=RawSQL("vector <=> %s", [str(embedding)])).order_by(
-        "distance"
-    )
+def sort_queries_by_relevance(
+    queries: QuerySet[QueryVector], embedding: list[float]
+) -> QuerySet[QueryVector]:
+    return queries.annotate(
+        distance=RawSQL("vector <=> %s", [str(embedding)])
+    ).order_by("distance")
 
 
 def chunk_content(chunk_name: str):
@@ -79,10 +78,10 @@ def chunk_content(chunk_name: str):
     return file.get("text", "")
 
 
-def retrieve_relevant_chunks_subject_filtered(subject: str, query: str, top_k: int):
-    chunks_accessible = filter_chunks_by_subject_access(subject)
+def retrieve_relevant_queries_subject_filtered(subject: str, query: str, top_k: int):
+    queries_accessible = filter_queries_by_subject_access(subject)
     embedding = embed_content(query)
-    sorted = sort_chunks_by_relevance(chunks_accessible, embedding)
+    sorted = sort_queries_by_relevance(queries_accessible, embedding)
     file_names = [chunk.file.name for chunk in sorted[:top_k]]
     contents = map(chunk_content, file_names)
     filtered_non_empty = list(map(lambda chunk: chunk, contents))

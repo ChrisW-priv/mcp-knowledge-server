@@ -7,7 +7,7 @@ from django.contrib.auth.models import User
 from content_extraction.process import process_file
 import uuid_utils as uuid
 
-from file_processing.models import KnowledgeSource, ChunkVector
+from file_processing.models import KnowledgeSource, QueryVector
 from file_processing.utils import embed_content
 import json
 from functools import partial
@@ -105,7 +105,11 @@ def process_file_to_sections(object_name: str):
 def insert_vector(object_name, knowledge_source, content_embedding):
     logger.info(f"Started Inserting vector for {object_name=}")
     vector = content_embedding.values
-    cv = ChunkVector(knowledge_source=knowledge_source, vector=vector)
+    cv = QueryVector(
+        knowledge_source=knowledge_source,
+        vector=vector,
+        embedding_model="text-embedding-3-large",
+    )  # Hardcoded embedding model for now (TODO: FIX)
     cv.file.name = object_name
     cv.save()
     logger.info(f"Done Inserting vector for {object_name=}")
