@@ -55,8 +55,6 @@ class EventarcHandler(APIView):
 
 
 def process_eventarc_message(serializer: EventarcMessageSerializer):
-    # You can process the validated data here
-    # For demonstration, just return the validated data
     object_name: str = serializer.validated_data["name"]
     logger.info(f"Recieived request to process {object_name=}")
     if object_name.endswith("/"):
