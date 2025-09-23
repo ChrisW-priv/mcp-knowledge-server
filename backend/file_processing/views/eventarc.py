@@ -130,8 +130,13 @@ def index_chunk(object_name: str):
     Indexes a chunk of data by generating queries and saving them to a file.
     """
     logger.info(f"Started indexing {object_name=}")
-    queries = generate_queries(object_name)
-    path_to_file_processing_root = (
+    try:
+        queries = generate_queries(object_name)
+    except ValueError as e:
+        logger.error(f"Error generating queries for {object_name}")
+        logger.exception(e)
+        return
+    path_to_file_processing_root: Path = (
         settings.PRIVATE_MOUNT / Path(object_name).parent.parent
     )
     path_to_queries = path_to_file_processing_root / "queries"
@@ -162,7 +167,7 @@ def generate_queries(object_name: str) -> Iterable[Query]:
         raise ValueError(f"Title not found in {object_name}")
     text = data.get("text")
     if not text:
-        raise ValueError(f"Text not found in {object_name}")
+        return
 
     if title and text:
         yield Query(title, text)

@@ -12,20 +12,21 @@ def generate_upload_blob_name(username, file_name):
     return f"django-uploads/{username}/{file_name}"
 
 
-def embed_content(content: str | list[str]) -> list[float]:
+def embed_content(content: str | list[str]) -> list[list[float] | None]:
     client = OpenAI()
 
     response = client.embeddings.create(input=content, model="text-embedding-3-large")
+    data = response.data
+    return [embedding.embedding for embedding in data]
 
-    return response.data[0].embedding
 
-
-def embed_content_gemini(content: str | list[str]) -> list[float]:
+def embed_content_gemini(content: str | list[str]) -> list[list[float] | None]:
     from google import genai
 
     client = genai.Client()
     result = client.models.embed_content(model="gemini-embedding-001", contents=content)
-    return result.embeddings
+    data = result.embeddings
+    return [embedding.values for embedding in data]
 
 
 def policies_assigned_to_subject(subject_identifier: str) -> list[list[str]]:
