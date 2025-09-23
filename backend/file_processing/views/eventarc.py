@@ -134,7 +134,7 @@ def index_chunk(object_name: str):
         settings.PRIVATE_MOUNT / Path(object_name).parent.parent
     )
     path_to_queries = path_to_file_processing_root / "queries"
-    os.mkdir(path_to_queries, exist_ok=True)
+    os.makedirs(path_to_queries, exist_ok=True)
     logger.info(f"Created {path_to_queries=}")
     for i, query in enumerate(queries):
         with open(path_to_queries / f"{i}.json", "w") as f:
