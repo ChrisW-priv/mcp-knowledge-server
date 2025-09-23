@@ -144,7 +144,7 @@ def index_chunk(object_name: str):
     logger.info(f"Created {path_to_queries=}")
     for i, query in enumerate(queries):
         with open(path_to_queries / f"{i}.json", "w", encoding="utf-8") as f:
-            json.dump(asdict(query), f)
+            json.dump(asdict(query), f, ensure_ascii=False)
             logger.info(f"Saved query {i} to {path_to_queries}")
     logger.info(f"Finished indexing {object_name=}")
 
