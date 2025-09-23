@@ -1,15 +1,14 @@
 import os
+from pathlib import Path
 from django.conf import settings
 
-BASE_DIR = settings.BASE_DIR
+BASE_DIR: Path = settings.BASE_DIR
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_BUCKET_NAME = os.environ.get("STATIC_BUCKET_NAME", None)
 UPLOAD_BUCKET_NAME = os.environ.get("UPLOAD_BUCKET_NAME", None)
-
-STATIC_URL = "static/"
 
 PUBLIC_MOUNT = BASE_DIR.parent / "data" / "public"
 PRIVATE_MOUNT = BASE_DIR.parent / "data" / "private"
