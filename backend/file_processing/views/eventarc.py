@@ -120,13 +120,13 @@ def insert_vector(
     object_name: str, knowledge_source: KnowledgeSource, content_embedding: list[float]
 ):
     logger.info(f"Started Inserting vector for {object_name=}")
-    cv = QueryVector(
+    qv = QueryVector(
         knowledge_source=knowledge_source,
         vector=content_embedding,
         embedding_model="text-embedding-3-large",
     )  # Hardcoded embedding model for now (TODO: FIX)
-    cv.file.name = object_name
-    cv.save()
+    qv.file.name = object_name
+    qv.save()
     logger.info(f"Done Inserting vector for {object_name=}")
 
 

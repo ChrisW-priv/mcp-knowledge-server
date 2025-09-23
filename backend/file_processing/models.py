@@ -64,7 +64,7 @@ class KnowledgeSource(
 
 class QueryVector(ObjectIdentifierMixin, models.Model):
     knowledge_source = models.ForeignKey(KnowledgeSource, on_delete=models.CASCADE)
-    file = models.FileField()
+    file = models.FileField(max_length=255)
     vector = VectorField(null=True, blank=False)
     embedding_model = models.CharField(max_length=255)
 
