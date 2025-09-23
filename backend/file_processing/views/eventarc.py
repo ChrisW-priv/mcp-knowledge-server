@@ -68,7 +68,7 @@ def process_eventarc_message(serializer: EventarcMessageSerializer):
         return Response(status=status.HTTP_204_NO_CONTENT)
     if (
         object_name.startswith(PROCESS_RESULTS_FOLDER)
-        and object_name.endswith(".xml")
+        and object_name.endswith(".json")
         and "chunks" in object_name
     ):
         index_chunk(object_name)
