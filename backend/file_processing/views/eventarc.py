@@ -48,38 +48,43 @@ class EventarcHandler(APIView):
         serializer = EventarcMessageSerializer(data=request.data)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        # You can process the validated data here
-        # For demonstration, just return the validated data
-        object_name: str = serializer.validated_data["name"]
-        logger.info(f"Recieived request to process {object_name=}")
-        if object_name.endswith("/"):
-            """
-            If the object is a folder, do nothing
-            """
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        if object_name.startswith(settings.UPLOAD_FOLDER_NAME):
-            process_file_to_sections(object_name)
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        if (
-            object_name.startswith(PROCESS_RESULTS_FOLDER)
-            and object_name.endswith(".json")
-            and "chunks" in object_name
-        ):
-            index_chunk(object_name)
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        if (
-            object_name.startswith(PROCESS_RESULTS_FOLDER)
-            and object_name.endswith(".json")
-            and "queries" in object_name
-        ):
-            process_query(object_name)
-            return Response(status=status.HTTP_204_NO_CONTENT)
 
+        return process_eventarc_message(serializer)
+
+
+def process_eventarc_message(serializer: EventarcMessageSerializer):
+    # You can process the validated data here
+    # For demonstration, just return the validated data
+    object_name: str = serializer.validated_data["name"]
+    logger.info(f"Recieived request to process {object_name=}")
+    if object_name.endswith("/"):
         """
-        In all other cases, do nothing,
-        for the object is neither a folder nor a file in the correct folder
+        If the object is a folder, do nothing
         """
         return Response(status=status.HTTP_204_NO_CONTENT)
+    if object_name.startswith(settings.UPLOAD_FOLDER_NAME):
+        process_file_to_sections(object_name)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+    if (
+        object_name.startswith(PROCESS_RESULTS_FOLDER)
+        and object_name.endswith(".json")
+        and "chunks" in object_name
+    ):
+        index_chunk(object_name)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+    if (
+        object_name.startswith(PROCESS_RESULTS_FOLDER)
+        and object_name.endswith(".json")
+        and "queries" in object_name
+    ):
+        process_query(object_name)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    """
+    In all other cases, do nothing,
+    for the object is neither a folder nor a file in the correct folder
+    """
+    return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 def process_file_to_sections(object_name: str):
