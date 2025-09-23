@@ -111,12 +111,13 @@ def process_file_to_sections(object_name: str):
     logger.info(f"We should now try to process the {section_digest_file=}")
 
 
-def insert_vector(object_name, knowledge_source, content_embedding):
+def insert_vector(
+    object_name: str, knowledge_source: KnowledgeSource, content_embedding: list[float]
+):
     logger.info(f"Started Inserting vector for {object_name=}")
-    vector = content_embedding.values
     cv = QueryVector(
         knowledge_source=knowledge_source,
-        vector=vector,
+        vector=content_embedding,
         embedding_model="text-embedding-3-large",
     )  # Hardcoded embedding model for now (TODO: FIX)
     cv.file.name = object_name
