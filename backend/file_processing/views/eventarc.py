@@ -147,9 +147,18 @@ def index_chunk(object_name: str):
     path_to_queries = path_to_file_processing_root / "queries"
     os.makedirs(path_to_queries, exist_ok=True)
     logger.info(f"Created {path_to_queries=}")
+
     for i, query in enumerate(queries):
+        # Ensure the query data is clean
+        query_dict: dict[str, str] = asdict(query)
+
+        # Clean the strings to ensure they're valid
+        for key, value in query_dict.items():
+            # Remove or replace problematic characters
+            query_dict[key] = value.encode("utf-8", errors="ignore").decode("utf-8")
+
         with open(path_to_queries / f"{i}.json", "w", encoding="utf-8") as f:
-            json.dump(asdict(query), f, ensure_ascii=False)
+            json.dump(query_dict, f, ensure_ascii=False, indent=2)
             logger.info(f"Saved query {i} to {path_to_queries}")
     logger.info(f"Finished indexing {object_name=}")
 
