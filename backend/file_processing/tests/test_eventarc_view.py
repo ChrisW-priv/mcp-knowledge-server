@@ -29,7 +29,7 @@ def test_process_eventarc_message_uploads(mock_process_file, mock_serializer):
 
 @patch("file_processing.views.eventarc.index_chunk")
 def test_process_eventarc_message_chunks(mock_index_chunk, mock_serializer):
-    object_name = "process-results/some-id/chunks.xml"
+    object_name = "process-results/some-id/chunks.json"
     mock_serializer.validated_data = {"name": object_name}
     response = eventarc.process_eventarc_message(mock_serializer)
     mock_index_chunk.assert_called_once_with(object_name)

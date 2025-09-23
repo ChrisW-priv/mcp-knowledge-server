@@ -16,6 +16,7 @@ from xml.dom import minidom
 from functools import partial
 from pathlib import Path
 import os
+import json
 
 
 logger = logging.getLogger(__name__)
@@ -138,7 +139,7 @@ def index_chunk(object_name: str):
     logger.info(f"Started indexing {object_name=}")
     try:
         queries = generate_queries(object_name)
-    except (ValueError, ET.ParseError) as e:
+    except ValueError as e:
         logger.error(f"Error generating queries for {object_name}")
         logger.exception(e)
         return
@@ -185,23 +186,16 @@ def generate_queries(object_name: str) -> Iterable[Query]:
     Returns an Iterable[dict] of query and answer for a given object_name.
     """
     file_path = str(settings.PRIVATE_MOUNT / object_name)
-    try:
-        tree = ET.parse(file_path)
-    except ET.ParseError as e:
-        raise ValueError(f"Invalid XML in {object_name}") from e
-    root = tree.getroot()
-    title_element = root.find("title")
-    if title_element is None or title_element.text is None:
+    with open(file_path, encoding="utf-8") as f:
+        data = json.load(f)
+    title = data.get("title")
+    if not title:
         raise ValueError(f"Title not found in {object_name}")
-    title = title_element.text
-    text_element = root.find("text")
-    if text_element is None or not text_element.text:
-        return
-    text = text_element.text
+    text = data.get("text")
 
     if title and text:
         yield Query(title, text)
-        yield Query(text, text)
+        yield Query(text[:100], text)
 
 
 def process_query(object_name: str):
