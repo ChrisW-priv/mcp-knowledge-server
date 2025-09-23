@@ -1,7 +1,7 @@
 import pytest
 from unittest.mock import patch, MagicMock, mock_open, call
 from rest_framework import status
-import json
+import xml.etree.ElementTree as ET
 import logging
 from pathlib import Path
 
@@ -29,7 +29,7 @@ def test_process_eventarc_message_uploads(mock_process_file, mock_serializer):
 
 @patch("file_processing.views.eventarc.index_chunk")
 def test_process_eventarc_message_chunks(mock_index_chunk, mock_serializer):
-    object_name = "process-results/some-id/chunks.json"
+    object_name = "process-results/some-id/chunks.xml"
     mock_serializer.validated_data = {"name": object_name}
     response = eventarc.process_eventarc_message(mock_serializer)
     mock_index_chunk.assert_called_once_with(object_name)
@@ -38,7 +38,7 @@ def test_process_eventarc_message_chunks(mock_index_chunk, mock_serializer):
 
 @patch("file_processing.views.eventarc.process_query")
 def test_process_eventarc_message_queries(mock_process_query, mock_serializer):
-    object_name = "process-results/some-id/queries.json"
+    object_name = "process-results/some-id/queries.xml"
     mock_serializer.validated_data = {"name": object_name}
     response = eventarc.process_eventarc_message(mock_serializer)
     mock_process_query.assert_called_once_with(object_name)
@@ -64,7 +64,7 @@ def test_process_eventarc_message_other(mock_serializer):
 def test_index_chunk(
     mock_settings, mock_open_file, mock_makedirs, mock_generate_queries
 ):
-    object_name = "process-results/some-id/chunks/chunk1.json"
+    object_name = "process-results/some-id/chunks/chunk1.xml"
     mock_settings.PRIVATE_MOUNT = Path("/fake/mount")
     queries_dict = [
         {"query": "q1", "answer": 'foo"}bar{"baz'},
@@ -80,23 +80,23 @@ def test_index_chunk(
 
     # Check that we open and write to the correct files
     expected_calls = [
-        call(path_to_queries / "0.json", "w", encoding="utf-8"),
-        call(path_to_queries / "1.json", "w", encoding="utf-8"),
+        call(path_to_queries / "0.xml", "w", encoding="utf-8"),
+        call(path_to_queries / "1.xml", "w", encoding="utf-8"),
     ]
     mock_open_file.assert_has_calls(expected_calls, any_order=True)
 
-    write_args = [c.args[0] for c in mock_open_file().write.call_args_list]
+    all_written_xml = [c.args[0] for c in mock_open_file().write.call_args_list]
 
-    # Reconstruct the two json strings
-    json_str1 = "".join(write_args[: len(write_args) // 2])
-    json_str2 = "".join(write_args[len(write_args) // 2 :])
-    logger.info("JSON string 1: %s", json_str1)
-    logger.info("JSON string 2: %s", json_str2)
+    parsed_queries = []
+    for xml_string in all_written_xml:
+        root = ET.fromstring(xml_string)
+        query = root.find("query").text
+        answer = root.find("answer").text
+        parsed_queries.append({"query": query, "answer": answer})
 
-    written_json_1 = json.loads(json_str1)
-    written_json_2 = json.loads(json_str2)
-
-    assert [written_json_1, written_json_2] == queries_dict
+    assert len(parsed_queries) == len(queries_dict)
+    for q_dict in queries_dict:
+        assert q_dict in parsed_queries
 
 
 @patch("file_processing.views.eventarc.insert_vector")
@@ -107,11 +107,11 @@ def test_index_chunk(
 def test_process_query(
     mock_settings, mock_open_file, mock_ks_get, mock_embed_content, mock_insert_vector
 ):
-    object_name = "process-results/some-id/queries/0.json"
+    object_name = "process-results/some-id/queries/0.xml"
     mock_settings.PRIVATE_MOUNT = Path("/fake/mount")
 
     # Mock file contents
-    query_content = '{"query": "test query"}'
+    query_content = "<root><query>test query</query><answer>test answer</answer></root>"
     metadata_content = "Original Filename: django-uploads/user/file.txt\n"
     mock_open_file.side_effect = [
         mock_open(read_data=query_content).return_value,

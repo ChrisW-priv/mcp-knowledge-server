@@ -11,7 +11,8 @@ import uuid_utils as uuid
 
 from file_processing.models import KnowledgeSource, QueryVector
 from file_processing.utils import embed_content
-import json
+import xml.etree.ElementTree as ET
+from xml.dom import minidom
 from functools import partial
 from pathlib import Path
 import os
@@ -67,14 +68,14 @@ def process_eventarc_message(serializer: EventarcMessageSerializer):
         return Response(status=status.HTTP_204_NO_CONTENT)
     if (
         object_name.startswith(PROCESS_RESULTS_FOLDER)
-        and object_name.endswith(".json")
+        and object_name.endswith(".xml")
         and "chunks" in object_name
     ):
         index_chunk(object_name)
         return Response(status=status.HTTP_204_NO_CONTENT)
     if (
         object_name.startswith(PROCESS_RESULTS_FOLDER)
-        and object_name.endswith(".json")
+        and object_name.endswith(".xml")
         and "queries" in object_name
     ):
         process_query(object_name)
@@ -137,7 +138,7 @@ def index_chunk(object_name: str):
     logger.info(f"Started indexing {object_name=}")
     try:
         queries = generate_queries(object_name)
-    except ValueError as e:
+    except (ValueError, ET.ParseError) as e:
         logger.error(f"Error generating queries for {object_name}")
         logger.exception(e)
         return
@@ -157,8 +158,18 @@ def index_chunk(object_name: str):
             # Remove or replace problematic characters
             query_dict[key] = value.encode("utf-8", errors="ignore").decode("utf-8")
 
-        with open(path_to_queries / f"{i}.json", "w", encoding="utf-8") as f:
-            json.dump(query_dict, f, ensure_ascii=False, indent=2)
+        root = ET.Element("root")
+        query_element = ET.SubElement(root, "query")
+        query_element.text = query_dict["query"]
+        answer_element = ET.SubElement(root, "answer")
+        answer_element.text = query_dict["answer"]
+
+        xml_string = ET.tostring(root, "utf-8")
+        reparsed = minidom.parseString(xml_string)
+        pretty_xml = reparsed.toprettyxml(indent="  ")
+
+        with open(path_to_queries / f"{i}.xml", "w", encoding="utf-8") as f:
+            f.write(pretty_xml)
             logger.info(f"Saved query {i} to {path_to_queries}")
     logger.info(f"Finished indexing {object_name=}")
 
@@ -174,14 +185,19 @@ def generate_queries(object_name: str) -> Iterable[Query]:
     Returns an Iterable[dict] of query and answer for a given object_name.
     """
     file_path = str(settings.PRIVATE_MOUNT / object_name)
-    with open(file_path, encoding="utf-8") as f:
-        data = json.load(f)
-    title = data.get("title")
-    if not title:
+    try:
+        tree = ET.parse(file_path)
+    except ET.ParseError as e:
+        raise ValueError(f"Invalid XML in {object_name}") from e
+    root = tree.getroot()
+    title_element = root.find("title")
+    if title_element is None or title_element.text is None:
         raise ValueError(f"Title not found in {object_name}")
-    text = data.get("text")
-    if not text:
+    title = title_element.text
+    text_element = root.find("text")
+    if text_element is None or not text_element.text:
         return
+    text = text_element.text
 
     if title and text:
         yield Query(title, text)
@@ -190,12 +206,17 @@ def generate_queries(object_name: str) -> Iterable[Query]:
 
 def process_query(object_name: str):
     file_path = str(settings.PRIVATE_MOUNT / object_name)
-    with open(file_path, encoding="utf-8") as f:
-        data: dict[str, str] = json.load(f)
-
-    query = data.get("query")
-    if not query:
-        raise ValueError(f"Query not found in {object_name}")
+    try:
+        tree = ET.parse(file_path)
+        root = tree.getroot()
+        query_element = root.find("query")
+        if query_element is None or not query_element.text:
+            raise ValueError(f"Query not found in {object_name}")
+        query = query_element.text
+    except (ET.ParseError, ValueError) as e:
+        logger.error(f"Error processing query from {object_name}")
+        logger.exception(e)
+        return
 
     path_to_metadata = (
         settings.PRIVATE_MOUNT / Path(object_name).parent.parent / "METADATA"
