@@ -99,7 +99,7 @@ def process_file_to_sections(object_name: str):
         ks.save()
 
     os.makedirs(output_dir, exist_ok=True)
-    with open(output_dir / "METADATA", "w") as f:
+    with open(output_dir / "METADATA", "w", encoding="utf-8") as f:
         f.write(f"Original Filename: {object_name}\n")
         f.write(f"Original Owner ID: {owner_username}\n")
 
@@ -143,7 +143,7 @@ def index_chunk(object_name: str):
     os.makedirs(path_to_queries, exist_ok=True)
     logger.info(f"Created {path_to_queries=}")
     for i, query in enumerate(queries):
-        with open(path_to_queries / f"{i}.json", "w") as f:
+        with open(path_to_queries / f"{i}.json", "w", encoding="utf-8") as f:
             json.dump(asdict(query), f)
             logger.info(f"Saved query {i} to {path_to_queries}")
     logger.info(f"Finished indexing {object_name=}")
@@ -160,7 +160,7 @@ def generate_queries(object_name: str) -> Iterable[Query]:
     Returns an Iterable[dict] of query and answer for a given object_name.
     """
     file_path = str(settings.PRIVATE_MOUNT / object_name)
-    with open(file_path, "r") as f:
+    with open(file_path, encoding="utf-8") as f:
         data = json.load(f)
     title = data.get("title")
     if not title:
@@ -176,7 +176,7 @@ def generate_queries(object_name: str) -> Iterable[Query]:
 
 def process_query(object_name: str):
     file_path = str(settings.PRIVATE_MOUNT / object_name)
-    with open(file_path, "r") as f:
+    with open(file_path, encoding="utf-8") as f:
         data: dict[str, str] = json.load(f)
 
     query = data.get("query")
@@ -186,7 +186,7 @@ def process_query(object_name: str):
     path_to_metadata = (
         settings.PRIVATE_MOUNT / Path(object_name).parent.parent / "METADATA"
     )
-    with open(path_to_metadata, "r") as f:
+    with open(path_to_metadata, encoding="utf-8") as f:
         metadata = f.read()
     text_to_find = "Original Filename: "
     position_start = metadata.find(text_to_find)
