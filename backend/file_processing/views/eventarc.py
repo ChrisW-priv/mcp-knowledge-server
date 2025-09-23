@@ -148,7 +148,7 @@ def index_chunk(object_name: str):
     os.makedirs(path_to_queries, exist_ok=True)
     logger.info(f"Created {path_to_queries=}")
 
-    for i, query in enumerate(queries):
+    for query in queries:
         # Ensure the query data is clean
         query_dict: dict[str, str] = asdict(query)
 
@@ -166,10 +166,11 @@ def index_chunk(object_name: str):
         xml_string = ET.tostring(root, "utf-8")
         reparsed = minidom.parseString(xml_string)
         pretty_xml = reparsed.toprettyxml(indent="  ")
+        path_to_query = path_to_queries / f"{uuid.uuid4()}.xml"
 
-        with open(path_to_queries / f"{i}.xml", "w", encoding="utf-8") as f:
+        with open(path_to_query, "w", encoding="utf-8") as f:
             f.write(pretty_xml)
-            logger.info(f"Saved query {i} to {path_to_queries}")
+            logger.info(f"Saved query to {path_to_query}")
     logger.info(f"Finished indexing {object_name=}")
 
 
