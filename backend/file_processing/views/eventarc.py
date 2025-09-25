@@ -67,7 +67,7 @@ def process_eventarc_message(serializer: EventarcMessageSerializer):
             with open(
                 settings.PRIVATE_MOUNT
                 / PROCESS_RESULTS_FOLDER
-                / "/some-id"
+                / "some-id"
                 / "foo"
                 / f"{i}.json",
                 "w",
