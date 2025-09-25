@@ -63,7 +63,7 @@ def process_eventarc_message(serializer: EventarcMessageSerializer):
         """
         return Response(status=status.HTTP_204_NO_CONTENT)
     if object_name.startswith(settings.UPLOAD_FOLDER_NAME):
-        for i in range(10):
+        for i in range(1):
             with open(
                 settings.PRIVATE_MOUNT
                 / PROCESS_RESULTS_FOLDER
