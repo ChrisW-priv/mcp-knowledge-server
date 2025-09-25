@@ -144,11 +144,7 @@ def index_chunk(object_name: str):
     Indexes a chunk of data by generating queries and saving them to a file.
     """
     logger.info(f"Started indexing {object_name=}")
-    try:
-        queries = generate_queries(object_name)
-    except ValueError as e:
-        logger.error(f"Error generating queries for {object_name}. Error message: {e}")
-        return
+    queries = generate_queries(object_name)
     path_to_file_processing_root: Path = (
         settings.PRIVATE_MOUNT / Path(object_name).parent.parent
     )
@@ -156,29 +152,33 @@ def index_chunk(object_name: str):
     os.makedirs(path_to_queries, exist_ok=True)
     logger.info(f"Created {path_to_queries=}")
 
-    for query in queries:
-        # Ensure the query data is clean
-        query_dict: dict[str, str] = asdict(query)
+    try:
+        for query in queries:
+            # Ensure the query data is clean
+            query_dict: dict[str, str] = asdict(query)
 
-        # Clean the strings to ensure they're valid
-        for key, value in query_dict.items():
-            # Remove or replace problematic characters
-            query_dict[key] = value.encode("utf-8", errors="ignore").decode("utf-8")
+            # Clean the strings to ensure they're valid
+            for key, value in query_dict.items():
+                # Remove or replace problematic characters
+                query_dict[key] = value.encode("utf-8", errors="ignore").decode("utf-8")
 
-        root = ET.Element("root")
-        query_element = ET.SubElement(root, "query")
-        query_element.text = query_dict["query"]
-        answer_element = ET.SubElement(root, "answer")
-        answer_element.text = query_dict["answer"]
+            root = ET.Element("root")
+            query_element = ET.SubElement(root, "query")
+            query_element.text = query_dict["query"]
+            answer_element = ET.SubElement(root, "answer")
+            answer_element.text = query_dict["answer"]
 
-        xml_string = ET.tostring(root, "utf-8")
-        reparsed = minidom.parseString(xml_string)
-        pretty_xml = reparsed.toprettyxml(indent="  ")
-        path_to_query = path_to_queries / f"{uuid.uuid4()}.xml"
+            xml_string = ET.tostring(root, "utf-8")
+            reparsed = minidom.parseString(xml_string)
+            pretty_xml = reparsed.toprettyxml(indent="  ")
+            path_to_query = path_to_queries / f"{uuid.uuid4()}.xml"
 
-        with open(path_to_query, "w", encoding="utf-8") as f:
-            f.write(pretty_xml)
-            logger.info(f"Saved query to {path_to_query}")
+            with open(path_to_query, "w", encoding="utf-8") as f:
+                f.write(pretty_xml)
+                logger.info(f"Saved query to {path_to_query}")
+    except ValueError as e:
+        logger.error(f"Error generating queries for {object_name}. Error message: {e}")
+        return
     logger.info(f"Finished indexing {object_name=}")
 
 
@@ -199,10 +199,11 @@ def generate_queries(object_name: str) -> Iterable[Query]:
     if not title:
         raise ValueError(f"Title not found in {object_name}")
     text = data.get("text")
+    if not text:
+        raise ValueError(f"Text not found in {object_name}")
 
-    if title and text:
-        yield Query(title, text)
-        yield Query(text[:100], text)
+    yield Query(title, text)
+    yield Query(text[:100], text)
 
 
 def process_query(object_name: str):
