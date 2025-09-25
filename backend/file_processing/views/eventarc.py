@@ -64,7 +64,14 @@ def process_eventarc_message(serializer: EventarcMessageSerializer):
         return Response(status=status.HTTP_204_NO_CONTENT)
     if object_name.startswith(settings.UPLOAD_FOLDER_NAME):
         for i in range(10):
-            with open(f"{PROCESS_RESULTS_FOLDER}/some-id/foo/{i}.json", "w") as f:
+            with open(
+                settings.PRIVATE_MOUNT
+                / PROCESS_RESULTS_FOLDER
+                / "/some-id"
+                / "foo"
+                / f"{i}.json",
+                "w",
+            ) as f:
                 f.write('{"foo": "bar"}')
         return Response(status=status.HTTP_204_NO_CONTENT)
     if (
