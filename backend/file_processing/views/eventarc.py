@@ -12,7 +12,6 @@ import uuid_utils as uuid
 from file_processing.models import KnowledgeSource, QueryVector
 from file_processing.utils import embed_content
 import xml.etree.ElementTree as ET
-from xml.dom import minidom
 from functools import partial
 from pathlib import Path
 import os
@@ -151,31 +150,10 @@ def index_chunk(object_name: str):
     path_to_queries = path_to_file_processing_root / "queries"
     os.makedirs(path_to_queries, exist_ok=True)
     logger.info(f"Created {path_to_queries=}")
+    save_query_to_queries_dir = partial(save_query_to_file, path_to_queries)
 
     try:
-        for query in queries:
-            # Ensure the query data is clean
-            query_dict: dict[str, str] = asdict(query)
-
-            # Clean the strings to ensure they're valid
-            for key, value in query_dict.items():
-                # Remove or replace problematic characters
-                query_dict[key] = value.encode("utf-8", errors="ignore").decode("utf-8")
-
-            root = ET.Element("root")
-            query_element = ET.SubElement(root, "query")
-            query_element.text = query_dict["query"]
-            answer_element = ET.SubElement(root, "answer")
-            answer_element.text = query_dict["answer"]
-
-            xml_string = ET.tostring(root, "utf-8")
-            reparsed = minidom.parseString(xml_string)
-            pretty_xml = reparsed.toprettyxml(indent="  ")
-            path_to_query = path_to_queries / f"{uuid.uuid4()}.xml"
-
-            with open(path_to_query, "w", encoding="utf-8") as f:
-                f.write(pretty_xml)
-                logger.info(f"Saved query to {path_to_query}")
+        any(map(save_query_to_queries_dir, queries))
     except ValueError as e:
         logger.error(f"Error generating queries for {object_name}. Error message: {e}")
         return
@@ -204,6 +182,23 @@ def generate_queries(object_name: str) -> Iterable[Query]:
 
     yield Query(title, text)
     yield Query(text[:100], text)
+
+
+def save_query_to_file(path_to_queries: Path, query: Query):
+    query_dict: dict[str, str] = asdict(query)
+
+    root = ET.Element("root")
+    query_element = ET.SubElement(root, "query")
+    query_element.text = query_dict["query"]
+    answer_element = ET.SubElement(root, "answer")
+    answer_element.text = query_dict["answer"]
+
+    xml_string = ET.tostring(root, "utf-8")
+    path_to_query = path_to_queries / f"{uuid.uuid4()}.xml"
+
+    with open(path_to_query, "w", encoding="utf-8") as f:
+        f.write(xml_string)
+        logger.info(f"Saved query to {path_to_query}")
 
 
 def process_query(object_name: str):
