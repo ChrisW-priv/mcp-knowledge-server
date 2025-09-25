@@ -147,8 +147,7 @@ def index_chunk(object_name: str):
     try:
         queries = generate_queries(object_name)
     except ValueError as e:
-        logger.error(f"Error generating queries for {object_name}")
-        logger.exception(e)
+        logger.error(f"Error generating queries for {object_name}. Error message: {e}")
         return
     path_to_file_processing_root: Path = (
         settings.PRIVATE_MOUNT / Path(object_name).parent.parent
