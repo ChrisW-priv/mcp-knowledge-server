@@ -117,14 +117,29 @@ def process_file_to_sections(object_name: str):
         logger.error(f"Error processing file {object_name}: {e}")
         rmtree(output_dir)
         return None
-    for chunk in chunks:
-        digest_hash: str = chunk.get("digest_hash")
-        if not digest_hash:
-            raise ValueError("No digest hash found")
-        filename = digest_hash + ".json"
-        file_path = output_dir / "chunks" / filename
-        with open(file_path, "w") as f:
-            json.dump(chunk, f)
+
+    chunk_dir = output_dir / "chunks"
+    os.makedirs(chunk_dir, exist_ok=True)
+    save_chunk_to_dir = partial(save_chunk, chunk_dir)
+
+    try:
+        any(map(save_chunk_to_dir, chunks))
+    except Exception as e:
+        logger.error(f"Error processing chunks for file {object_name}: {e}")
+        rmtree(chunk_dir)
+        return None
+
+    return chunks
+
+
+def save_chunk(chunk_dir, chunk):
+    digest_hash: str = chunk.get("digest_hash")
+    if not digest_hash:
+        raise ValueError("No digest hash found")
+    filename = digest_hash + ".json"
+    file_path = chunk_dir / filename
+    with open(file_path, "w") as f:
+        json.dump(chunk, f)
 
 
 def insert_vector(
