@@ -12,6 +12,7 @@ import uuid_utils as uuid
 
 from file_processing.models import KnowledgeSource, QueryVector
 from file_processing.utils import embed_content
+from file_processing.hypo_query_generation import get_section_digest_question_generator
 import xml.etree.ElementTree as ET
 from functools import partial
 from pathlib import Path
@@ -176,15 +177,20 @@ def generate_queries(data: dict[str, str | dict[str, Any]]) -> Iterable[Query]:
     """
     Returns an Iterable[Query] of query and answer for a given object_name.
     """
-    title = data.get("title")
-    if not title:
-        raise ValueError("Title not found in the chunk")
-    text = data.get("text")
-    if not text:
-        raise ValueError("Text not found in the chunk")
 
-    yield Query(title)
-    yield Query(text[:100])
+    predictor = get_section_digest_question_generator()
+    prediction = predictor(data)
+    questions = (prediction.questions,)
+    for question in questions:
+        yield Query(question)
+
+    title: str = data.get("title")
+    if title:
+        yield Query(title)
+
+    text: str = data.get("text")
+    if text:
+        yield Query(text[:100])
 
 
 def save_query_to_file(path_to_queries: Path, query: Query):

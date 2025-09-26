@@ -43,6 +43,10 @@ class SectionDigestQuestionGenerator(dspy.Module):
         )
 
 
+def get_section_digest_question_generator(xml_formatter: XML_FORMATTER | None = None):
+    return SectionDigestQuestionGenerator(xml_formatter)
+
+
 def _default_xml_formatter(section_dict: SECTION_DICT_T):
     """Default XML formatter - can be replaced with custom formatters."""
     section_digest = section_dict["section_digest"]
