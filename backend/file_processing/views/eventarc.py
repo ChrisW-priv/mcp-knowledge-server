@@ -217,7 +217,7 @@ def save_query_to_file(path_to_queries: Path, query: Query):
     xml_string = ET.tostring(root, "utf-8")
 
     path_to_query = path_to_queries / f"{uuid.uuid4()}.xml"
-    with open(path_to_query, "w", encoding="utf-8") as f:
+    with open(path_to_query, "wb") as f:
         f.write(xml_string)
     logger.info(f"Saved query to {path_to_query=}")
 
