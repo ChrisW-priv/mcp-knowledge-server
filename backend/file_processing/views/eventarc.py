@@ -195,7 +195,7 @@ def generate_queries(data: dict[str, str | dict[str, Any]]) -> Iterable[Query]:
 
     predictor = get_section_digest_question_generator()
     prediction = predictor(data)
-    questions = (prediction.questions,)
+    questions = prediction.questions
     for question in questions:
         yield Query(question)
 
