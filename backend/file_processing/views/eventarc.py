@@ -1,6 +1,7 @@
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass
 import logging
-from typing import Iterable
+from shutil import rmtree
+from typing import Any, Iterable
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, serializers
@@ -62,16 +63,7 @@ def process_eventarc_message(serializer: EventarcMessageSerializer):
         """
         return Response(status=status.HTTP_204_NO_CONTENT)
     if object_name.startswith(settings.UPLOAD_FOLDER_NAME):
-        for i in range(1):
-            with open(
-                settings.PRIVATE_MOUNT
-                / PROCESS_RESULTS_FOLDER
-                / "some-id"
-                / "chunks"
-                / f"{i}.json",
-                "w",
-            ) as f:
-                f.write('{"foo": "bar"}')
+        process_file_to_sections(object_name)
         return Response(status=status.HTTP_204_NO_CONTENT)
     if (
         object_name.startswith(PROCESS_RESULTS_FOLDER)
@@ -116,12 +108,15 @@ def process_file_to_sections(object_name: str):
         f.write(f"Original Filename: {object_name}\n")
         f.write(f"Original Owner ID: {owner_username}\n")
 
-    process_file(
-        input_path=str(settings.PRIVATE_MOUNT / object_name), output_dir=output_dir
-    )
-
-    section_digest_file = output_dir / "sections.jsonl"
-    logger.info(f"We should now try to process the {section_digest_file=}")
+    try:
+        chunks = process_file(
+            input_path=str(settings.PRIVATE_MOUNT / object_name), output_dir=output_dir
+        )
+    except Exception as e:
+        logger.error(f"Error processing file {object_name}: {e}")
+        rmtree(output_dir)
+        return None
+    return chunks
 
 
 def insert_vector(
@@ -143,19 +138,24 @@ def index_chunk(object_name: str):
     Indexes a chunk of data by generating queries and saving them to a file.
     """
     logger.info(f"Started indexing {object_name=}")
-    queries = generate_queries(object_name)
+    file_path = str(settings.PRIVATE_MOUNT / object_name)
+    with open(file_path, encoding="utf-8") as f:
+        data = json.load(f)
+    queries = generate_queries(data)
+
     path_to_file_processing_root: Path = (
         settings.PRIVATE_MOUNT / Path(object_name).parent.parent
     )
     path_to_queries = path_to_file_processing_root / "queries"
     os.makedirs(path_to_queries, exist_ok=True)
     logger.info(f"Created {path_to_queries=}")
-    save_query_to_queries_dir = partial(save_query_to_file, path_to_queries)
 
+    save_query_to_queries_dir = partial(save_query_to_file, path_to_queries)
     try:
         any(map(save_query_to_queries_dir, queries))
     except ValueError as e:
         logger.error(f"Error generating queries for {object_name}. Error message: {e}")
+        rmtree(path_to_queries)
         return
     logger.info(f"Finished indexing {object_name=}")
 
@@ -163,42 +163,35 @@ def index_chunk(object_name: str):
 @dataclass
 class Query:
     query: str
-    answer: str
 
 
-def generate_queries(object_name: str) -> Iterable[Query]:
+def generate_queries(data: dict[str, str | dict[str, Any]]) -> Iterable[Query]:
     """
-    Returns an Iterable[dict] of query and answer for a given object_name.
+    Returns an Iterable[Query] of query and answer for a given object_name.
     """
-    file_path = str(settings.PRIVATE_MOUNT / object_name)
-    with open(file_path, encoding="utf-8") as f:
-        data = json.load(f)
     title = data.get("title")
     if not title:
-        raise ValueError(f"Title not found in {object_name}")
+        raise ValueError("Title not found in the chunk")
     text = data.get("text")
     if not text:
-        raise ValueError(f"Text not found in {object_name}")
+        raise ValueError("Text not found in the chunk")
 
-    yield Query(title, text)
-    yield Query(text[:100], text)
+    yield Query(title)
+    yield Query(text[:100])
 
 
 def save_query_to_file(path_to_queries: Path, query: Query):
-    query_dict: dict[str, str] = asdict(query)
+    query_str = query.query
 
     root = ET.Element("root")
     query_element = ET.SubElement(root, "query")
-    query_element.text = query_dict["query"]
-    answer_element = ET.SubElement(root, "answer")
-    answer_element.text = query_dict["answer"]
-
+    query_element.text = query_str
     xml_string = ET.tostring(root, "utf-8")
-    path_to_query = path_to_queries / f"{uuid.uuid4()}.xml"
 
+    path_to_query = path_to_queries / f"{uuid.uuid4()}.xml"
     with open(path_to_query, "w", encoding="utf-8") as f:
         f.write(xml_string)
-        logger.info(f"Saved query to {path_to_query}")
+    logger.info(f"Saved query to {path_to_query=}")
 
 
 def process_query(object_name: str):
