@@ -21,7 +21,6 @@ DATABASES = {
             "pool": {
                 "min_size": 1,
                 "max_size": 20,
-                "open": False,
             },
         },
     }
