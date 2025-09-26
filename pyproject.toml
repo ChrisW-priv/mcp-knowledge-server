@@ -21,6 +21,7 @@ dependencies = [
     "mcp[cli]>=1.14.0",
     "httpx>=0.28.1",
     "fast-agent-mcp>=0.3.6",
+    "dspy>=3.0.3",
 ]
 
 [dependency-groups]
