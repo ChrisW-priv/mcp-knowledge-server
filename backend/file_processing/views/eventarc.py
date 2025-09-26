@@ -121,7 +121,7 @@ def process_file_to_sections(object_name: str):
         if not digest_hash:
             raise ValueError("No digest hash found")
         filename = digest_hash + ".json"
-        file_path = output_dir / filename
+        file_path = output_dir / "chunks" / filename
         with open(file_path, "w") as f:
             json.dump(chunk, f)
 
