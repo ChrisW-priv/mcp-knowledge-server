@@ -51,14 +51,15 @@ def _default_xml_formatter(section_dict: SECTION_DICT_T):
     """Default XML formatter - can be replaced with custom formatters."""
     section_digest = section_dict["section_digest"]
 
-    xml_parts = [f"<section title='{section_digest.title}'>"]
-    xml_parts.append(f"<text>{section_digest.text}</text>")
+    xml_parts = [f"<section title='{section_digest.get('title', '')}'>"]
+    xml_parts.append(f"<text>{section_digest.get('text', '')}</text>")
 
-    if section_digest.subsections:
+    subsections = section_digest.get("subsections", [])
+    if subsections:
         xml_parts.append("<subsections>")
-        for subsection in section_digest.subsections:
-            xml_parts.append(f"<subsection title='{subsection.title}'>")
-            xml_parts.append(f"<text>{subsection.text}</text>")
+        for subsection in subsections:
+            xml_parts.append(f"<subsection title='{subsection.get('title', '')}'>")
+            xml_parts.append(f"<text>{subsection.get('text', '')}</text>")
             xml_parts.append("</subsection>")
         xml_parts.append("</subsections>")
 
@@ -69,18 +70,19 @@ def _default_xml_formatter(section_dict: SECTION_DICT_T):
 def _hierarchical_xml_formatter(section_dict: SECTION_DICT_T):
     """Alternative XML formatter with more hierarchy."""
     section_digest = section_dict["section_digest"]
-    language = section_dict["language"]
+    language = section_dict.get("language", "en")
 
     xml_parts = [f"<document language='{language}'>"]
     xml_parts.append("<main_section>")
-    xml_parts.append(f"<title>{section_digest.title}</title>")
-    xml_parts.append(f"<content>{section_digest.text}</content>")
+    xml_parts.append(f"<title>{section_digest.get('title', '')}</title>")
+    xml_parts.append(f"<content>{section_digest.get('text', '')}</content>")
 
-    if section_digest.subsections:
-        for i, subsection in enumerate(section_digest.subsections, 1):
+    subsections = section_digest.get("subsections", [])
+    if subsections:
+        for i, subsection in enumerate(subsections, 1):
             xml_parts.append(f"<subsection_{i}>")
-            xml_parts.append(f"<title>{subsection.title}</title>")
-            xml_parts.append(f"<content>{subsection.text}</content>")
+            xml_parts.append(f"<title>{subsection.get('title', '')}</title>")
+            xml_parts.append(f"<content>{subsection.get('text', '')}</content>")
             xml_parts.append(f"</subsection_{i}>")
 
     xml_parts.append("</main_section>")
@@ -90,13 +92,17 @@ def _hierarchical_xml_formatter(section_dict: SECTION_DICT_T):
 
 def _flat_xml_formatter(section_dict: SECTION_DICT_T):
     """Flat XML formatter."""
-
     section_digest = section_dict["section_digest"]
 
     xml_parts = []
-    xml_parts.append(f"<main>{section_digest.title}: {section_digest.text}</main>")
+    xml_parts.append(
+        f"<main>{section_digest.get('title', '')}: {section_digest.get('text', '')}</main>"
+    )
 
-    for subsection in section_digest.subsections:
-        xml_parts.append(f"<sub>{subsection.title}: {subsection.text}</sub>")
+    subsections = section_digest.get("subsections", [])
+    for subsection in subsections:
+        xml_parts.append(
+            f"<sub>{subsection.get('title', '')}: {subsection.get('text', '')}</sub>"
+        )
 
     return "\n".join(xml_parts)
