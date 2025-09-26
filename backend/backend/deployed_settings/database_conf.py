@@ -1,4 +1,5 @@
 import os
+from psycopg_pool import ConnectionPool
 
 
 DB_USER = os.getenv("POSTGRES_USER", "postgres")
@@ -9,6 +10,12 @@ db_conn_name = os.getenv("DB_CONN_NAME")
 pre_db_conn_name = os.getenv("PRE_DB_CONN_NAME", "/cloudsql/")
 unix_socket_path = f"{pre_db_conn_name}{db_conn_name}"
 
+pool = ConnectionPool(
+    min_size=1,
+    max_size=20,
+    open=False,
+)
+
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql_psycopg2",
@@ -17,5 +24,8 @@ DATABASES = {
         "PASSWORD": DB_PASSWORD,
         "HOST": unix_socket_path,
         "PORT": "5432",
+        "OPTIONS": {
+            "pool": pool,
+        },
     }
 }

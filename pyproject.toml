@@ -13,7 +13,6 @@ dependencies = [
     "google-cloud-storage>=3.3.0",
     "hypercorn>=0.17.3",
     "uuid-utils>=0.11.0",
-    "psycopg2-binary>=2.9.10",
     "pycasbin>=2.2.0",
     "django-content-access-control>=0.3.0",
     "casbin>=1.43.0",
@@ -22,6 +21,7 @@ dependencies = [
     "httpx>=0.28.1",
     "fast-agent-mcp>=0.3.6",
     "dspy>=3.0.3",
+    "psycopg[binary,pool]>=3.2.10",
 ]
 
 [dependency-groups]
