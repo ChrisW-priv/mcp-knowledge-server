@@ -8,6 +8,8 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     UV_COMPILE_BYTECODE=1 \
     UV_PYTHON_PREFERENCE='only-system'
 
+RUN apt-get update && apt-get install -y g++
+
 COPY pyproject.toml .
 
 RUN uv sync --no-dev
