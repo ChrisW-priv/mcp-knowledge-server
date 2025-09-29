@@ -12,35 +12,74 @@ XML_FORMATTER = Callable[
 
 
 class GenerateUniqueQuestions(dspy.Signature):
-    """Generate questions that can only be answered by the full section digest, not by individual subsections."""
+    """Generate questions that can only be answered by the full section digest,
+    not by individual subsections. Do not generate questions that are too
+    generic or do not directly address the content. Also, ensure that the
+    questions are grammatically correct and coherent, as well as concise and
+    specific. Questions should be written in the language specified. Be sure
+    question include relevant keywords from the section digest."""
 
-    xml_content: str = dspy.InputField(desc="XML representation of the section digest")
+    section_digest_xml: str = dspy.InputField(
+        desc="XML representation of the section digest"
+    )
     language: str = dspy.InputField(desc="Language for the questions")
     questions: list[str] = dspy.OutputField(
         desc="List of concise questions answerable only by the full section"
     )
 
 
+class EvaluateGeneratedQuestions(dspy.Signature):
+    """Decide if the generated questions are relevant to the section digest they
+    were proposed for. Correct questions if they are not relevant, too generic,
+    or do not directly address the content. Also, ensure that the questions are
+    grammatically correct and coherent, as well as concise and specific.
+    Questions should be written in the language specified. Be sure question
+    include relevant keywords from the section digest."""
+
+    section_digest_xml: str = dspy.InputField(
+        desc="XML representation of the section digest"
+    )
+    language: str = dspy.InputField(desc="Language for the questions")
+    questions: list[str] = dspy.InputField(
+        desc="List of questions generated originally"
+    )
+    better_questions: list[str] = dspy.OutputField(
+        desc="List of questions that are improved compared to the original"
+    )
+
+
 class SectionDigestQuestionGenerator(dspy.Module):
-    def __init__(self, xml_formatter: XML_FORMATTER | None = None):
+    def __init__(
+        self,
+        xml_formatter: XML_FORMATTER | None = None,
+        correction_turns: int | None = None,
+    ):
         super().__init__()
         self.question_generator = dspy.ChainOfThought(GenerateUniqueQuestions)
+        self.question_evaluator = dspy.ChainOfThought(EvaluateGeneratedQuestions)
         self.xml_formatter: XML_FORMATTER = xml_formatter or _default_xml_formatter
+        self.correction_turns: int = correction_turns or 2
 
     def forward(self, section_dict: SECTION_DICT_T) -> dspy.Prediction:
         # Convert to XML representation using configured formatter
-        xml_content = self.xml_formatter(section_dict)
+        section_digest_xml = self.xml_formatter(section_dict)
 
         # Generate unique questions
-        result = self.question_generator(
-            xml_content=xml_content,
+        prediction = self.question_generator(
+            section_digest_xml=section_digest_xml,
             language=section_dict.get("language", "en"),
         )
+        questions = prediction.questions
 
-        return dspy.Prediction(
-            xml_representation=xml_content,
-            questions=result.questions,
-        )
+        for _ in range(self.correction_turns):
+            prediction = self.question_evaluator(
+                section_digest_xml=section_digest_xml,
+                questions=questions,
+                language=section_dict.get("language", "en"),
+            )
+            questions = prediction.better_questions
+
+        return dspy.Prediction(questions=questions)
 
 
 def get_section_digest_question_generator(xml_formatter: XML_FORMATTER | None = None):
