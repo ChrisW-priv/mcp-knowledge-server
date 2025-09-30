@@ -129,7 +129,7 @@ module "cloudrun-application" {
   django_superuser_password_secret_id = var.django_superuser_secret_id
   django_secret_key_secret_id         = var.django_secret_key_secret_id
   database_type                       = "postgres"
-  public_access                       = true
+  public_access                       = false
   docker_image_url                    = "${var.google_region}-docker.pkg.dev/${var.google_project_id}/ghcr/chrisw-priv/mcp-knowledge-server/backend:${var.docker_image_tag}"
   postgres_username                   = local.db_username
   cloudsql_connection_name            = module.cloudsql_postgres.instance_connection_name

@@ -27,16 +27,15 @@ resource "google_service_account" "cloud_tasks_sa" {
 }
 
 # ─────────────────────────────── IAM for Eventarc SA ─────────────────────────────────
-# allow SA to read from input bucket
+# Allow SA to read from input bucket and receive events
 resource "google_storage_bucket_iam_member" "input_sa_viewer" {
   bucket = var.existing_input_bucket_name
   role   = "roles/storage.objectViewer"
   member = "serviceAccount:${local.pubsub_service_account_email}"
 }
 
-resource "google_project_iam_member" "workflowsinvoker" {
+resource "google_project_iam_member" "eventarc_permissions" {
   for_each = toset([
-    "roles/workflows.invoker",
     "roles/eventarc.eventReceiver",
     "roles/logging.logWriter",
   ])
@@ -63,6 +62,13 @@ resource "google_storage_bucket_iam_member" "function_bucket_viewer" {
   member = "serviceAccount:${google_service_account.cloud_function_sa.email}"
 }
 
+# Allow Cloud Function SA to impersonate Cloud Tasks SA for OIDC token creation
+resource "google_service_account_iam_member" "function_impersonate_tasks_sa" {
+  service_account_id = google_service_account.cloud_tasks_sa.name
+  role               = "roles/iam.serviceAccountUser"
+  member             = "serviceAccount:${google_service_account.cloud_function_sa.email}"
+}
+
 # ─────────────────────────────── IAM for Cloud Tasks SA ─────────────────────────────────
 resource "google_project_iam_member" "tasks_permissions" {
   for_each = toset([
@@ -73,22 +79,7 @@ resource "google_project_iam_member" "tasks_permissions" {
   member  = "serviceAccount:${google_service_account.cloud_tasks_sa.email}"
 }
 
-# Cloud Tasks SA needs to be able to create OIDC tokens for itself
-resource "google_service_account_iam_member" "tasks_sa_token_creator" {
-  service_account_id = google_service_account.cloud_tasks_sa.name
-  role               = "roles/iam.serviceAccountTokenCreator"
-  member             = "serviceAccount:${google_service_account.cloud_tasks_sa.email}"
-}
-
-resource "google_cloud_run_v2_service_iam_member" "tasks_queue_run_invoker" {
-  project  = var.google_project_id
-  location = var.google_region
-  name     = data.google_cloud_run_v2_service.existing_service.name
-  role     = "roles/run.invoker"
-  member   = "serviceAccount:${google_service_account.cloud_function_sa.email}"
-}
-
-# Cloud Tasks SA needs to invoke Cloud Run
+# Cloud Tasks SA needs to invoke Cloud Run service
 resource "google_cloud_run_v2_service_iam_member" "tasks_run_invoker" {
   project  = var.google_project_id
   location = var.google_region
@@ -97,7 +88,7 @@ resource "google_cloud_run_v2_service_iam_member" "tasks_run_invoker" {
   member   = "serviceAccount:${google_service_account.cloud_tasks_sa.email}"
 }
 
-# ─────────────────────────────── Original IAM (kept for compatibility) ─────────────────────────────────
+# ─────────────────────────────── GCS Pub/Sub Integration ─────────────────────────────────
 data "google_storage_project_service_account" "gcs_account" {}
 resource "google_project_iam_member" "pubsubpublisher" {
   project = var.google_project_id
@@ -105,16 +96,12 @@ resource "google_project_iam_member" "pubsubpublisher" {
   member  = "serviceAccount:${data.google_storage_project_service_account.gcs_account.email_address}"
 }
 
-# Get current project data
-data "google_project" "current" {}
-
-# ─────────────────────────────── Eventarc permissions fix ─────────────────────────────────
-# Give the SA permission to receive events
-resource "google_project_iam_member" "sa_eventarc_receiver" {
-  project    = var.google_project_id
-  role       = "roles/eventarc.eventReceiver"
-  member     = "serviceAccount:${var.service_account_email}"
-  depends_on = [var.service_account_email]
+# ─────────────────────────────── Cloud Tasks OIDC Authentication ─────────────────────────────────
+# Allow Cloud Tasks SERVICE AGENT to mint ID tokens for the tasks SA
+resource "google_service_account_iam_member" "cloudtasks_agent_token_creator" {
+  service_account_id = google_service_account.cloud_tasks_sa.name
+  role               = "roles/iam.serviceAccountTokenCreator"
+  member             = "serviceAccount:service-${var.google_project_number}@gcp-sa-cloudtasks.iam.gserviceaccount.com"
 }
 
 # ─────────────────────────────── Cloud Function Setup ─────────────────────────────────
@@ -143,13 +130,6 @@ data "google_cloud_run_v2_service" "existing_service" {
   name     = local.run_service_name
   location = var.google_region
   project  = var.google_project_id
-}
-
-# Allow Cloud Function SA to impersonate Cloud Tasks SA for OIDC token creation
-resource "google_service_account_iam_member" "function_impersonate_tasks_sa" {
-  service_account_id = google_service_account.cloud_tasks_sa.name
-  role               = "roles/iam.serviceAccountUser"
-  member             = "serviceAccount:${google_service_account.cloud_function_sa.email}"
 }
 
 # Cloud Function
@@ -228,25 +208,4 @@ resource "google_cloud_tasks_queue" "file_processing_queue" {
     google_service_account.cloud_tasks_sa,
     google_project_iam_member.tasks_permissions
   ]
-}
-
-# Allow Cloud Function SA to create tokens as Cloud Tasks SA
-resource "google_service_account_iam_member" "function_token_creator_for_tasks" {
-  service_account_id = google_service_account.cloud_tasks_sa.name
-  role               = "roles/iam.serviceAccountTokenCreator"
-  member             = "serviceAccount:${google_service_account.cloud_function_sa.email}"
-}
-
-# Ensure Cloud Tasks SA can invoke any Cloud Run service (backup permission)
-resource "google_project_iam_member" "tasks_run_invoker_project" {
-  project = var.google_project_id
-  role    = "roles/run.invoker"
-  member  = "serviceAccount:${google_service_account.cloud_tasks_sa.email}"
-}
-
-# Allow Cloud Tasks SERVICE AGENT to mint ID tokens for the tasks SA
-resource "google_service_account_iam_member" "cloudtasks_agent_token_creator" {
-  service_account_id = google_service_account.cloud_tasks_sa.name
-  role               = "roles/iam.serviceAccountTokenCreator"
-  member             = "serviceAccount:service-${var.google_project_number}@gcp-sa-cloudtasks.iam.gserviceaccount.com"
 }
