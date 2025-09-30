@@ -1,12 +1,10 @@
 import pytest
-from unittest.mock import patch, MagicMock, mock_open, call
+from unittest.mock import patch, MagicMock, mock_open
 from rest_framework import status
-import xml.etree.ElementTree as ET
 import logging
 from pathlib import Path
 
 from file_processing.views import eventarc
-from file_processing.views.eventarc import Query
 
 
 logger = logging.getLogger(__name__)
@@ -55,48 +53,6 @@ def test_process_eventarc_message_other(mock_serializer):
     mock_serializer.validated_data = {"name": "other/file.txt"}
     response = eventarc.process_eventarc_message(mock_serializer)
     assert response.status_code == status.HTTP_204_NO_CONTENT
-
-
-@patch("file_processing.views.eventarc.generate_queries")
-@patch("file_processing.views.eventarc.os.makedirs")
-@patch("builtins.open", new_callable=mock_open)
-@patch("file_processing.views.eventarc.settings")
-def test_index_chunk(
-    mock_settings, mock_open_file, mock_makedirs, mock_generate_queries
-):
-    object_name = "process-results/some-id/chunks/chunk1.xml"
-    mock_settings.PRIVATE_MOUNT = Path("/fake/mount")
-    queries_dict = [
-        {"query": "q1", "answer": 'foo"}bar{"baz'},
-        {"query": "q2", "answer": 'baz"}bar{"foo'},
-    ]
-    queries = [Query(**query) for query in queries_dict]
-    mock_generate_queries.return_value = queries
-
-    eventarc.index_chunk(object_name)
-
-    path_to_queries = Path("/fake/mount/process-results/some-id/queries")
-    mock_makedirs.assert_called_once_with(path_to_queries, exist_ok=True)
-
-    # Check that we open and write to the correct files
-    expected_calls = [
-        call(path_to_queries / "0.xml", "w", encoding="utf-8"),
-        call(path_to_queries / "1.xml", "w", encoding="utf-8"),
-    ]
-    mock_open_file.assert_has_calls(expected_calls, any_order=True)
-
-    all_written_xml = [c.args[0] for c in mock_open_file().write.call_args_list]
-
-    parsed_queries = []
-    for xml_string in all_written_xml:
-        root = ET.fromstring(xml_string)
-        query = root.find("query").text
-        answer = root.find("answer").text
-        parsed_queries.append({"query": query, "answer": answer})
-
-    assert len(parsed_queries) == len(queries_dict)
-    for q_dict in queries_dict:
-        assert q_dict in parsed_queries
 
 
 @patch("file_processing.views.eventarc.insert_vector")

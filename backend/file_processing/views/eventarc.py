@@ -12,7 +12,8 @@ import uuid_utils as uuid
 
 from file_processing.models import KnowledgeSource, QueryVector
 from file_processing.utils import embed_content
-from file_processing.hypo_query_generation import get_section_digest_question_generator
+from file_processing.hypo_query_generation import QueryGenerator
+from file_processing.section_digest_formatters import default_xml_formatter
 import xml.etree.ElementTree as ET
 from functools import partial
 from pathlib import Path
@@ -188,24 +189,21 @@ class Query:
     query: str
 
 
+query_generator = QueryGenerator(default_xml_formatter)
+
+
 def generate_queries(data: dict[str, str | dict[str, Any]]) -> Iterable[Query]:
     """
     Returns an Iterable[Query] of query and answer for a given object_name.
     """
 
-    predictor = get_section_digest_question_generator()
-    prediction = predictor(data)
-    questions = prediction.questions
-    for question in questions:
-        yield Query(question)
-
-    title: str = data.get("title")
-    if title:
-        yield Query(title)
-
-    text: str = data.get("text")
-    if text:
-        yield Query(text[:100])
+    queries = query_generator(data)
+    if queries is None:
+        logger.error("Failed to generate queries")
+        return
+    list_of_queries = queries.questions
+    for query in list_of_queries:
+        yield Query(query)
 
 
 def save_query_to_file(path_to_queries: Path, query: Query):

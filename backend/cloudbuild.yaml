@@ -5,8 +5,7 @@ steps:
     entrypoint: "bash"
     args:
       - "-c"
-      - |
-        docker pull ${_ARTIFACT_REGISTRY_URL}/${_IMAGE}-base:latest || exit 0
+      - docker pull ${_ARTIFACT_REGISTRY_URL}/${_IMAGE}-base:latest || exit 0
 
   - id: "build base image"
     waitFor:
