@@ -133,3 +133,9 @@ variable "extra_env_vars" {
   }))
   default = []
 }
+
+variable "public_access" {
+  description = "Whether to enable public access to the Cloud Run service."
+  type        = bool
+  default     = false
+}

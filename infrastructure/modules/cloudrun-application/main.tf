@@ -622,3 +622,18 @@ resource "google_cloud_run_v2_job" "backend_setup_job" {
     }
   }
 }
+
+# -------------------------------------------------------------------------
+# OPTIONAL – allow unauthenticated invocations (public access)
+# -------------------------------------------------------------------------
+resource "google_cloud_run_v2_service_iam_member" "application_backend_public" {
+  count    = var.public_access ? 1 : 0
+  project  = var.google_project_id
+  location = var.google_region
+  name     = google_cloud_run_v2_service.application_backend.name
+
+  role   = "roles/run.invoker"
+  member = "allUsers"
+
+  depends_on = [google_cloud_run_v2_service.application_backend]
+}
