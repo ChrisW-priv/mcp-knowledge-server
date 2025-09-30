@@ -1,3 +1,4 @@
+from django.conf import settings
 from rest_framework.authentication import BaseAuthentication
 from rest_framework import exceptions
 from google.oauth2 import id_token
@@ -22,7 +23,7 @@ class GoogleOIDCAuthentication(BaseAuthentication):
 
         token = auth_header[len("Bearer ") :]
         try:
-            audience = "https://knowledge-server-obr76apg5a-ez.a.run.app"
+            audience = settings.SERVICE_URL
             idinfo = id_token.verify_oauth2_token(token, requests.Request(), audience)
             email = idinfo.get("email")
             if not email:

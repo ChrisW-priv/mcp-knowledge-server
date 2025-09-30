@@ -14,7 +14,9 @@ CSRF_TRUSTED_ORIGINS = [
 ]
 
 if all([K_SERVICE, GOOGLE_CLOUD_REGION, GOOGLE_CLOUD_PROJECT]):
-    service_url = (
+    SERVICE_URL = (
         f"https://{K_SERVICE}-{GOOGLE_CLOUD_PROJECT}.{GOOGLE_CLOUD_REGION}.run.app"
     )
-    CSRF_TRUSTED_ORIGINS.append(service_url)
+    CSRF_TRUSTED_ORIGINS.append(SERVICE_URL)
+else:
+    SERVICE_URL = None
